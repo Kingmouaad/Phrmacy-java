@@ -30,7 +30,6 @@ public class otcmedicine extends medicine {
     
     @Override
     public boolean isAvailableForSale() {
-        // OTC only needs stock to be available
         return this.getquantity() > 0;
     }
     
@@ -42,8 +41,8 @@ public class otcmedicine extends medicine {
     @Override
     public String toString() {
         String restrictions = "";
-        if (purchaseLimit > 0) restrictions += ", Limit: " + purchaseLimit + " per purchase";
-        if (minimumAge > 0) restrictions += ", Min Age: " + minimumAge;
+        if (this.purchaseLimit > 0) restrictions += ", Limit: " + this.purchaseLimit + " per purchase";
+        if (this.minimumAge > 0) restrictions += ", Min Age: " + this.minimumAge;
         
         return "OTC MEDICINE - " + super.toString() + restrictions;
     }
