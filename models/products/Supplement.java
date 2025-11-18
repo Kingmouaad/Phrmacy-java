@@ -1,11 +1,12 @@
 package models.products;
 
-
-
-public class Supplement extends product {
+import java.time.LocalDate;
+import models.interfaces.Expirable;
+public class Supplement extends product implements Expirable {
     private String supplementType;  // "Vitamin", "Mineral", "Herbal", etc.
     private String servingSize;
     private String benefits;        // Health benefits description
+     private LocalDate expirationDate;
     
     public Supplement(String productId, String name, double price, 
                      int quantity, String supplementType, 
@@ -46,5 +47,28 @@ public class Supplement extends product {
                ", Type: " + supplementType +
                ", Serving: " + servingSize +
                (benefits != null ? ", Benefits: " + benefits : "");
+    }
+    @Override
+    public LocalDate getExpirationDate() {
+        return expirationDate;
+    }
+    
+    @Override
+    public void setExpirationDate(LocalDate date) {
+        this.expirationDate = date;
+    }
+    
+    @Override
+    public boolean isExpired() {
+        if (expirationDate == null) return false;
+        return LocalDate.now().isAfter(expirationDate);
+    }
+    
+    @Override
+    public long getDaysUntilExpiration() {
+        if (expirationDate == null) return Long.MAX_VALUE;
+        return java.time.temporal.ChronoUnit.DAYS.between(
+            LocalDate.now(), expirationDate
+        );
     }
 }

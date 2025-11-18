@@ -1,6 +1,8 @@
 package models.products;
 
-public abstract class  product {
+import models.interfaces.Sellable;
+
+public abstract class  product implements Sellable {
     protected String id;
     protected String name;
     protected double price;
@@ -17,31 +19,34 @@ public abstract class  product {
         this.quantity=quantity;
     }
 
-    String getid(){
+    public String getid(){
         return this.id;
     }
-     String getname(){
+     public String getname(){
         return this.name;
     }
-     double getprice(){
+    @Override
+    public double getprice(){
         return this.price;
     }
-     int getquantity(){
+    @Override
+
+     public int getquantity(){
         return this.quantity;
     }
-    void setid(String id){
+    public void setid(String id){
         this.id=id;
     }
-    void setname(String name){
+    public void setname(String name){
         this.name=name;
     }
-    void setprice(double price){
+    public void setprice(double price){
          if(price<0 ){
             throw new IllegalArgumentException("error enter the correct price  ");
         }
         this.price=price;
     }
-    void setquantity(int quantity){
+    public void setquantity(int quantity){
         this.quantity=quantity;
     }
     public abstract boolean isAvailableForSale();

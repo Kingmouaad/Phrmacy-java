@@ -1,6 +1,8 @@
 package models.products;
 
-public class PrescriptionMedicine extends medicine {
+import models.interfaces.Prescribable;
+
+public class PrescriptionMedicine extends medicine implements Prescribable{
     private boolean requiresPrescription;
     private String prescriptionId;  // Links to a valid prescription
     

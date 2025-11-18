@@ -1,10 +1,15 @@
 package models.products;
 
-public abstract class medicine extends product {
+import java.time.LocalDate;
+
+import models.interfaces.Expirable;
+
+public abstract class medicine extends product  implements Expirable {
     protected String activeIngredient;
     protected String dosageform;
     protected String volume;
     protected String manufacteur;
+    protected LocalDate expirationDate;
 
     public medicine(String id,String name,double price,int quantity,String activeIngredient,String dosageform,String volume,String manufacteur){
         super(id,name,price,quantity);
@@ -56,5 +61,35 @@ public abstract class medicine extends product {
     @Override
     public String  getProductType(){
         return "Medicine";
+    }
+     // Implementing Expirable interface
+    @Override
+    public LocalDate getExpirationDate() {
+        return expirationDate;
+    }
+    
+    @Override
+    public void setExpirationDate(LocalDate date) {
+        this.expirationDate = date;
+    }
+    
+    @Override
+    public boolean isExpired() {
+        if (expirationDate == null) {
+            return false;  // If no date set assume not expired
+        }
+        return LocalDate.now().isAfter(expirationDate);
+    }
+    
+    @Override
+    public long getDaysUntilExpiration() {
+        if (expirationDate == null) {
+            return Long.MAX_VALUE; 
+        }
+        //i did search for it i cant do that alone hh
+        return java.time.temporal.ChronoUnit.DAYS.between(
+            LocalDate.now(), 
+            expirationDate
+        );
     }
 }
