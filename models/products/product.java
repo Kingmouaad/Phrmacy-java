@@ -25,11 +25,11 @@ public abstract class  product implements Sellable {
      public String getname(){
         return this.name;
     }
-    @Override
+    // @Override
     public double getprice(){
         return this.price;
     }
-    @Override
+    // @Override
 
      public int getquantity(){
         return this.quantity;

@@ -30,12 +30,13 @@ public class Customer extends Person {
         this.loyaltyPoints += points;
     }
     
-    public void useLoyaltyPoints(double points) {
-        if (points <= loyaltyPoints) {
-            this.loyaltyPoints -= points;
-        }
-        throw new IllegalArgumentException("you dont have enough loyaltypoint");
+   public void useLoyaltyPoints(double points) {
+    if (points <= loyaltyPoints) {
+        this.loyaltyPoints -= points;
+    } else {
+        throw new IllegalArgumentException("Not enough loyalty points");
     }
+}
     
     // Purchase history management
     public List<String> getPurchaseHistory() {

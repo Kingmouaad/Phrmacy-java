@@ -64,6 +64,7 @@ public class Supplement extends product implements Expirable {
         return LocalDate.now().isAfter(expirationDate);
     }
     
+    // did search for it 
     @Override
     public long getDaysUntilExpiration() {
         if (expirationDate == null) return Long.MAX_VALUE;

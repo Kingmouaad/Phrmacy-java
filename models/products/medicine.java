@@ -56,7 +56,7 @@ public abstract class medicine extends product  implements Expirable {
     }
     @Override
     public boolean isAvailableForSale(){
-        return (this.quantity<0);
+        return (this.quantity > 0 && !isExpired());
     }
     @Override
     public String  getProductType(){

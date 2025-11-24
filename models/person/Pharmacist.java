@@ -10,7 +10,7 @@ public class Pharmacist extends Person {
                      String email,String address, String licenseNumber) {
         super(personId, name, phone, email,address);
         this.licenseNumber = licenseNumber;
-        this.accessLevel = 1;  // Default to basic level
+        this.accessLevel = 1;  // Default 
     }
     
     @Override
@@ -29,13 +29,12 @@ public class Pharmacist extends Person {
     
     // Setters
     public void setAccessLevel(int level) {
-        if (level >= 1 && level <= 3) {
-            this.accessLevel = level;
-        }else{
-              throw new IllegalArgumentException("the level should be between 1 and 3 ");
-        }
-        
+    if (level >= 1 && level <= 3) {
+        this.accessLevel = level;
+    } else {
+        throw new IllegalArgumentException("the level should be between 1 and 3");
     }
+}
     
     // Permission checks
     public boolean canProcessSales() {
