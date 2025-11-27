@@ -33,7 +33,7 @@ public class Main {
         scanner.close();
     }
     
-    // ========== INITIALIZATION ==========
+    // setup for the project 
     private static void printHeader() {
         System.out.println("╔════════════════════════════════════╗");
         System.out.println("║  PHARMACY MANAGEMENT SYSTEM v2.0   ║");
@@ -85,11 +85,11 @@ public class Main {
         sup.setBenefits("Immune support");
         products.add(sup);
         
-        System.out.println("✅ Test data loaded!");
-        System.out.println("📌 Login ID: P001\n");
+        System.out.println("Test data loaded!");
+        System.out.println("Login ID: P001\n");
     }
     
-    // ========== LOGIN SYSTEM ==========
+    //  LOGIN SYSTEM 
     private static boolean login() {
         System.out.println("🔐 PHARMACIST LOGIN");
         System.out.print("Enter Pharmacist ID: ");
@@ -98,15 +98,15 @@ public class Main {
         for (Pharmacist pharm : pharmacists) {
             if (pharm.getPersonId().equalsIgnoreCase(id)) {
                 currentPharmacist = pharm;
-                System.out.println("\n✅ Welcome, " + pharm.getFullName() + "!");
-                System.out.println("🔑 Access Level: " + pharm.getAccessLevelName() + "\n");
+                System.out.println("\nWelcome, " + pharm.getFullName() + "!");
+                System.out.println(" Access Level: " + pharm.getAccessLevelName() + "\n");
                 return true;
             }
         }
         return false;
     }
     
-    // ========== MAIN MENU LOOP ==========
+    // our menu 
     private static void runMainLoop() {
         boolean running = true;
         while (running) {
@@ -142,7 +142,7 @@ public class Main {
         System.out.println("");
     }
     
-    // ========== 1. PRODUCT MANAGEMENT ==========
+    // 1 PRODUCT MANAGEMENT 
     private static void productManagement() {
         while (true) {
             System.out.println("\n PRODUCT MANAGEMENT");
@@ -208,7 +208,7 @@ public class Main {
         String id = scanner.nextLine().trim();
         
         if (findProductById(id) != null) {
-            System.out.println("❌ ID already exists!");
+            System.out.println("ID already exists!");
             return;
         }
         
@@ -226,14 +226,14 @@ public class Main {
                 case 3: newProduct = createMedicalDevice(id, name, price, qty); break;
                 case 4: newProduct = createSupplement(id, name, price, qty); break;
                 default: 
-                    System.out.println("❌ Invalid type!");
+                    System.out.println(" Invalid type!");
                     return;
             }
             
             products.add(newProduct);
-            System.out.println("✅ Product added successfully!");
+            System.out.println(" Product added successfully!");
         } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
+            System.out.println(" Error: " + e.getMessage());
         }
     }
     
@@ -323,7 +323,7 @@ public class Main {
             return;
         }
         
-        System.out.print("\n🔧 Product ID to update: ");
+        System.out.print("\nProduct ID to update: ");
         String id = scanner.nextLine();
         product p = findProductById(id);
         
@@ -385,7 +385,7 @@ public class Main {
         }
     }
     
-    // ========== 2. INVENTORY MANAGEMENT ==========
+    // 2 INVENTORY MANAGEMENT 
     private static void inventoryManagement() {
         while (true) {
             System.out.println("\nINVENTORY MANAGEMENT");
@@ -411,8 +411,8 @@ public class Main {
     private static void checkStockLevels() {
         System.out.println("\nSTOCK LEVELS");
         for (product p : products) {
-            String status = p.getquantity() > 20 ? "✅" : 
-                           p.getquantity() > 5 ? "⚠️" : "🔴";
+            String status = p.getquantity() > 20 ? "u have more then 20 " : 
+                           p.getquantity() > 5 ? "u have more then 5 " : "u have lesss then 5 ";
             System.out.println(status + " " + p.getid() + " - " + p.getname() + 
                              ": " + p.getquantity() + " units");
         }
@@ -810,7 +810,7 @@ public class Main {
         }
     }
     
-    // ========== HELPER METHODS ==========
+    // helper methods so i try to make less code 
     private static product findProductById(String id) {
         for (product p : products) {
             if (p.getid().equalsIgnoreCase(id.trim())) return p;
