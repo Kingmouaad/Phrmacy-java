@@ -1,0 +1,3 @@
+ID|NAME|PHONE|EMAIL|LOYALTY
+C001|John Smith|555-1234|john@email.com|0.0
+C002|Mary Johnson|555-5555|mary@email.com|0.0

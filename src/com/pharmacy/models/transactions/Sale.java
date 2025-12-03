@@ -1,4 +1,4 @@
-package models.transaction;
+package com.pharmacy.models.transactions;
 
 import java.util.ArrayList;
 import java.util.List;

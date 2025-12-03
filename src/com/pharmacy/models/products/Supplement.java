@@ -1,7 +1,7 @@
-package models.products;
+package com.pharmacy.models.products;
 
 import java.time.LocalDate;
-import models.interfaces.Expirable;
+import com.pharmacy.interfaces.Expirable;
 public class Supplement extends product implements Expirable {
     private String supplementType;  // "Vitamin", "Mineral", "Herbal", etc.
     private String servingSize;
@@ -64,10 +64,9 @@ public class Supplement extends product implements Expirable {
         return LocalDate.now().isAfter(expirationDate);
     }
     
-    // did search for it 
     @Override
     public long getDaysUntilExpiration() {
-        if (expirationDate == null) return Long.MAX_VALUE;
+        if (expirationDate == null) return 0;
         return java.time.temporal.ChronoUnit.DAYS.between(
             LocalDate.now(), expirationDate
         );

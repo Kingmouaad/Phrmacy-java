@@ -1,6 +1,6 @@
-package models.products;
+package com.pharmacy.models.products;
 
-import models.interfaces.Prescribable;
+import com.pharmacy.interfaces.Prescribable;
 
 public class PrescriptionMedicine extends medicine implements Prescribable{
     private boolean requiresPrescription;

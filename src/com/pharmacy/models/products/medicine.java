@@ -1,8 +1,8 @@
-package models.products;
+package com.pharmacy.models.products;
 
 import java.time.LocalDate;
 
-import models.interfaces.Expirable;
+import com.pharmacy.interfaces.Expirable;
 
 public abstract class medicine extends product  implements Expirable {
     protected String activeIngredient;
@@ -84,9 +84,9 @@ public abstract class medicine extends product  implements Expirable {
     @Override
     public long getDaysUntilExpiration() {
         if (expirationDate == null) {
-            return Long.MAX_VALUE; 
+            // when no date is set, treat as 0 days instead of a huge number
+            return 0;
         }
-        //i did search for it i cant do that alone hh
         return java.time.temporal.ChronoUnit.DAYS.between(
             LocalDate.now(), 
             expirationDate

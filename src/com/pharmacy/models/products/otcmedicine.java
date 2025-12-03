@@ -1,4 +1,4 @@
-package models.products;
+package com.pharmacy.models.products;
 
 
 

@@ -1,4 +1,4 @@
-package models.person;
+package com.pharmacy.models.persons;
 
 
 

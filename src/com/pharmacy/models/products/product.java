@@ -1,6 +1,6 @@
-package models.products;
+package com.pharmacy.models.products;
 
-import models.interfaces.Sellable;
+import com.pharmacy.interfaces.Sellable;
 
 public abstract class  product implements Sellable {
     protected String id;

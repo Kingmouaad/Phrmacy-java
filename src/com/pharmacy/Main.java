@@ -1,9 +1,14 @@
-package main;
+package com.pharmacy;
 
-import models.interfaces.*;
-import models.products.*;
-import models.person.*;
-import models.transaction.*;
+import com.pharmacy.exceptions.*;
+import com.pharmacy.interfaces.*;
+import com.pharmacy.models.persons.*;
+import com.pharmacy.models.products.*;
+import com.pharmacy.models.transactions.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +21,13 @@ public class Main {
     private static List<Pharmacist> pharmacists = new ArrayList<>();
     private static List<Doctor> doctors = new ArrayList<>();
     private static List<Transaction> transactions = new ArrayList<>();
+
+    // Data files
+    private static final Path DATA_DIR = Paths.get("data");
+    private static final Path PRODUCTS_FILE = DATA_DIR.resolve("products.txt");
+    private static final Path STOCK_FILE = DATA_DIR.resolve("stock.txt");
+    private static final Path CUSTOMERS_FILE = DATA_DIR.resolve("customers.txt");
+    private static final Path SALES_FILE = DATA_DIR.resolve("sales.txt");
     
     private static Scanner scanner = new Scanner(System.in);
     private static Pharmacist currentPharmacist = null;
@@ -35,63 +47,237 @@ public class Main {
     
     // setup for the project 
     private static void printHeader() {
-        System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║  PHARMACY MANAGEMENT SYSTEM v2.0   ║");
-        System.out.println("╚════════════════════════════════════╝");
+        System.out.println("                                        ");
+        System.out.println("      PHARMACY MANAGEMENT SYSTEM        ");
+        System.out.println("                                        ");
     }
     
     private static void initializeTestData() {
-        // Pharmacist
-        Pharmacist pharm = new Pharmacist("P001", "Dr. Sarah Johnson", 
-                                         "555-5678", "sarah@pharmacy.com", 
-                                         "123 Main St", "PHR123456");
-        pharm.setAccessLevel(3);
-        pharmacists.add(pharm);
-        
-        // Customers
-        customers.add(new Customer("C001", "John Smith", "555-1234", 
-                                  "john@email.com", "456 Oak Ave"));
-        customers.add(new Customer("C002", "Mary Johnson", "555-5555", 
-                                  "mary@email.com", "789 Pine St"));
-        
-        // Doctor
-        doctors.add(new Doctor("D001", "Dr. Emily Chen", "555-9999",
-                              "chen@clinic.com", "789 Elm St", "MED789456", 
-                              "General Practice"));
-        
-        // Products
-        PrescriptionMedicine med1 = new PrescriptionMedicine(
-            "PM001", "Amoxicillin 500mg", 25.00, 50,
-            "Amoxicillin", "Capsule", "500mg", "PharmaCorp");
-        med1.setExpirationDate(LocalDate.of(2026, 12, 31));
-        products.add(med1);
-        
-        otcmedicine med2 = new otcmedicine(
-            "OTC001", "Ibuprofen 200mg", 8.99, 100,
-            "Ibuprofen", "Tablet", "200mg", "HealthPlus");
-        med2.setExpirationDate(LocalDate.of(2026, 6, 30));
-        med2.setPurchaseLimit(2);
-        products.add(med2);
-        
-        medicaledevice dev = new medicaledevice(
-            "DEV001", "Digital Thermometer", 15.99, 25,
-            "Thermometer", 12, "MedTech");
-        products.add(dev);
-        
-        Supplement sup = new Supplement(
-            "SUP001", "Vitamin C 1000mg", 12.99, 80,
-            "Vitamin", "1 tablet daily");
-        sup.setExpirationDate(LocalDate.of(2026, 9, 30));
-        sup.setBenefits("Immune support");
-        products.add(sup);
-        
-        System.out.println("Test data loaded!");
-        System.out.println("Login ID: P001\n");
+        // If data files exist, load from them. Otherwise create default in-memory data
+        Pharmacist pharm1 = new Pharmacist("PHR111", "benmalti mouaad", "02398857578", "kjhfu@gmail.com", "mosta", "78487578392");
+        pharm1.setAccessLevel(3);
+        pharmacists.add(pharm1);
+
+        if (Files.exists(PRODUCTS_FILE) || Files.exists(CUSTOMERS_FILE) || Files.exists(STOCK_FILE) || Files.exists(SALES_FILE)) {
+            loadProducts();
+            loadCustomers();
+            loadStock();
+            loadSales();
+            System.out.println("Test data loaded from '" + DATA_DIR + "'.");
+        } else {
+            // create 4 files.txt with initial data
+            saveAllDataToFiles();
+            System.out.println("No data files found. Created initial data in '" + DATA_DIR + "'.");
+        }
+        // show the actual sample pharmacist ID so the user can log in
+        System.out.println("Login ID: PHR111\n");
+    }
+
+    public static void loadProducts() {
+        try {
+            if (Files.notExists(PRODUCTS_FILE)) return;
+            List<String> lines = Files.readAllLines(PRODUCTS_FILE);
+
+            for (String line : lines) {
+                if (line == null) continue;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                // skip header line
+                if (line.toUpperCase().startsWith("TYPE") || line.startsWith("No ")) continue;
+
+                String[] parts = line.split("\\|");
+                if (parts.length < 5) continue;
+
+                String type = parts[0].trim();
+                String id = parts[1].trim();
+                String name = parts[2].trim();
+                double price = 0.0;
+                int qty = 0;
+                try { price = Double.parseDouble(parts[3].trim()); } catch (NumberFormatException ex) {}
+                try { qty = Integer.parseInt(parts[4].trim()); } catch (NumberFormatException ex) {}
+
+                product p = null;
+                String lower = type.toLowerCase();
+                if (lower.contains("prescription")) {
+                    // medicine constructor requires active ingredient etc., provide safe defaults
+                    p = new PrescriptionMedicine(id, name, price, qty, "UnknownIngredient", "UnknownForm", "N/A", "UnknownManufacturer");
+                } else if (lower.contains("over") || lower.contains("otc")) {
+                    p = new otcmedicine(id, name, price, qty, "UnknownIngredient", "UnknownForm", "N/A", "UnknownManufacturer");
+                } else if (lower.contains("medical")) {
+                    p = new medicaledevice(id, name, price, qty, "GeneralDevice", 0, "UnknownManufacturer");
+                } else if (lower.contains("supplement")) {
+                    p = new Supplement(id, name, price, qty, "General", "1 serving");
+                } else {
+                    // fallback: create medical device as a neutral product type
+                    p = new medicaledevice(id, name, price, qty, "GeneralDevice", 0, "UnknownManufacturer");
+                }
+
+                products.add(p);
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading products: " + e.getMessage());
+        }
+    }
+
+    private static void loadCustomers() {
+        try {
+            if (Files.notExists(CUSTOMERS_FILE)) return;
+            List<String> lines = Files.readAllLines(CUSTOMERS_FILE);
+            for (String line : lines) {
+                if (line == null) continue;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                if (line.toUpperCase().startsWith("ID|NAME") || line.startsWith("No ")) continue;
+
+                String[] parts = line.split("\\|");
+                if (parts.length < 5) continue;
+
+                String id = parts[0].trim();
+                String name = parts[1].trim();
+                String phone = parts[2].trim();
+                String email = parts[3].trim();
+                double loyalty = 0.0;
+                try { loyalty = Double.parseDouble(parts[4].trim()); } catch (NumberFormatException ex) {}
+
+                Customer c = new Customer(id, name, phone, email, "");
+                if (loyalty > 0) c.addLoyaltyPoints(loyalty);
+                customers.add(c);
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading customers: " + e.getMessage());
+        }
+    }
+
+    private static void loadStock() {
+        try {
+            if (Files.notExists(STOCK_FILE)) return;
+            List<String> lines = Files.readAllLines(STOCK_FILE);
+            for (String line : lines) {
+                if (line == null) continue;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                if (line.toUpperCase().startsWith("ID|QUANTITY") || line.startsWith("No ")) continue;
+
+                String[] parts = line.split("\\|");
+                if (parts.length < 2) continue;
+                String id = parts[0].trim();
+                int qty = 0;
+                try { qty = Integer.parseInt(parts[1].trim()); } catch (NumberFormatException ex) {}
+                product p = findProductById(id);
+                if (p != null) p.setquantity(qty);
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading stock: " + e.getMessage());
+        }
+    }
+
+    private static void loadSales() {
+        try {
+            if (Files.notExists(SALES_FILE)) return;
+            List<String> lines = Files.readAllLines(SALES_FILE);
+            if (lines.size() == 1 && lines.get(0).startsWith("No sales")) return; // nothing to load
+
+            for (String line : lines) {
+                if (line == null) continue;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                if (line.toUpperCase().startsWith("ID|TYPE") || line.startsWith("No ")) continue;
+
+                String[] parts = line.split("\\|");
+                if (parts.length < 4) continue;
+                String id = parts[0].trim();
+                String type = parts[1].trim().toUpperCase();
+                double total = 0.0;
+                try { total = Double.parseDouble(parts[2].trim()); } catch (NumberFormatException ex) {}
+                String status = parts[3].trim();
+
+                Transaction txn = null;
+                if (type.contains("SALE")) {
+                    txn = new Sale(id, "", "");
+                } else if (type.contains("RESTOCK")) {
+                    txn = new Restock(id, "", "");
+                } else if (type.contains("RETURN")) {
+                    txn = new Return(id, "", "", "");
+                }
+                if (txn != null) {
+                    txn.setTotalAmount(total);
+                    txn.setStatus(status);
+                    transactions.add(txn);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading sales: " + e.getMessage());
+        }
+    }
+    
+
+    private static void saveAllDataToFiles() {
+        try {
+            if (Files.notExists(DATA_DIR)) {
+                Files.createDirectories(DATA_DIR);
+            }
+            Files.writeString(PRODUCTS_FILE, buildProductFileContent());
+            Files.writeString(STOCK_FILE, buildStockFileContent());
+            Files.writeString(CUSTOMERS_FILE, buildCustomerFileContent());
+            Files.writeString(SALES_FILE, buildSalesFileContent());
+        } catch (IOException e) {
+            System.out.println("Warning: Unable to write data files: " + e.getMessage());
+        }
+    }
+
+    private static String buildProductFileContent() {
+        StringBuilder builder = new StringBuilder("TYPE|ID|NAME|PRICE|QTY").append(System.lineSeparator());
+        for (product p : products) {
+            builder.append(p.getProductType()).append('|')
+                   .append(p.getid()).append('|')
+                   .append(p.getname()).append('|')
+                   .append(String.format("%.2f", p.getprice())).append('|')
+                   .append(p.getquantity()).append(System.lineSeparator());
+        }
+        return builder.toString();
+    }
+
+    private static String buildStockFileContent() {
+        StringBuilder builder = new StringBuilder("ID|QUANTITY|STATUS").append(System.lineSeparator());
+        for (product p : products) {
+            String status = p.getquantity() > 20 ? "Healthy" :
+                            p.getquantity() > 5 ? "Moderate" : "Low";
+            builder.append(p.getid()).append('|')
+                   .append(p.getquantity()).append('|')
+                   .append(status).append(System.lineSeparator());
+        }
+        return builder.toString();
+    }
+
+    private static String buildCustomerFileContent() {
+        StringBuilder builder = new StringBuilder("ID|NAME|PHONE|EMAIL|LOYALTY").append(System.lineSeparator());
+        for (Customer c : customers) {
+            builder.append(c.getPersonId()).append('|')
+                   .append(c.getFullName()).append('|')
+                   .append(c.getPhoneNumber()).append('|')
+                   .append(c.getEmail()).append('|')
+                   .append(c.getLoyaltyPoints()).append(System.lineSeparator());
+        }
+        return builder.toString();
+    }
+
+    private static String buildSalesFileContent() {
+        if (transactions.isEmpty()) {
+            return "No sales recorded yet." + System.lineSeparator();
+        }
+        StringBuilder builder = new StringBuilder("ID|TYPE|TOTAL|STATUS").append(System.lineSeparator());
+        for (Transaction txn : transactions) {
+            builder.append(txn.getTransactionId()).append('|')
+                   .append(txn.getTransactionType()).append('|')
+                   .append(String.format("%.2f", txn.getTotalAmount())).append('|')
+                   .append(txn.getStatus()).append(System.lineSeparator());
+        }
+        return builder.toString();
     }
     
     //  LOGIN SYSTEM 
     private static boolean login() {
-        System.out.println("🔐 PHARMACIST LOGIN");
+        System.out.println("PHARMACIST LOGIN");
         System.out.print("Enter Pharmacist ID: ");
         String id = scanner.nextLine().trim();
         
@@ -176,14 +362,18 @@ public class Main {
         
         for (product p : products) {
             System.out.println("\n" + p);
-            System.out.println("   Available: " + (p.isAvailableForSale() ? "✅ YES" : "❌ NO"));
+            System.out.println("   Available: " + (p.isAvailableForSale() ? "YES" : "NO"));
             
             if (p instanceof Expirable) {
                 Expirable exp = (Expirable) p;
-                if (exp.isExpired()) {
-                    System.out.println("   ⚠️ EXPIRED!");
+                LocalDate date = exp.getExpirationDate();
+                if (date == null) {
+                    System.out.println("   Expiration date: not set");
+                } else if (exp.isExpired()) {
+                    System.out.println("   EXPIRED on " + date);
                 } else {
-                    System.out.println("   📅 Expires in " + exp.getDaysUntilExpiration() + " days");
+                    long days = exp.getDaysUntilExpiration();
+                    System.out.println("   Expires in " + days + " days (on " + date + ")");
                 }
             }
             System.out.println("   " + "─".repeat(50));
@@ -231,6 +421,7 @@ public class Main {
             }
             
             products.add(newProduct);
+            saveAllDataToFiles();
             System.out.println(" Product added successfully!");
         } catch (Exception e) {
             System.out.println(" Error: " + e.getMessage());
@@ -324,11 +515,11 @@ public class Main {
         }
         
         System.out.print("\nProduct ID to update: ");
-        String id = scanner.nextLine();
-        product p = findProductById(id);
-        
-        if (p == null) {
-            System.out.println(" Product not found!");
+        product p;
+        try {
+            p = getProductOrThrow(scanner.nextLine());
+        } catch (ProductNotFoundException e) {
+            System.out.println(e.getMessage());
             return;
         }
         
@@ -359,6 +550,8 @@ public class Main {
             default:
                 System.out.println(" Invalid choice!");
         }
+        // persist changes
+        saveAllDataToFiles();
     }
     
     private static void deleteProduct() {
@@ -368,17 +561,18 @@ public class Main {
         }
         
         System.out.print("\n Product ID to delete: ");
-        String id = scanner.nextLine();
-        product p = findProductById(id);
-        
-        if (p == null) {
-            System.out.println(" Product not found!");
+        product p;
+        try {
+            p = getProductOrThrow(scanner.nextLine());
+        } catch (ProductNotFoundException e) {
+            System.out.println(e.getMessage());
             return;
         }
         
         System.out.print("Delete '" + p.getname() + "'? (yes/no): ");
         if (scanner.nextLine().equalsIgnoreCase("yes")) {
             products.remove(p);
+            saveAllDataToFiles();
             System.out.println(" Product deleted!");
         } else {
             System.out.println("Cancelled.");
@@ -425,7 +619,7 @@ public class Main {
         boolean foundLow = false;
         for (product p : products) {
             if (p.getquantity() <= threshold) {
-                System.out.println("  • " + p.getname() + " - Only " + p.getquantity() + " left!");
+                System.out.println("  - " + p.getname() + " - Only " + p.getquantity() + " left!");
                 foundLow = true;
             }
         }
@@ -468,18 +662,19 @@ public class Main {
         while (adding) {
             System.out.print("\nProduct ID: ");
             String pid = scanner.nextLine();
-            product p = findProductById(pid);
-            
-            if (p == null) {
-                System.out.println("Product not found!");
-                continue;
+            try {
+                product p = getProductOrThrow(pid);
+                int qty = getIntInput("Quantity received: ");
+                if (qty <= 0) {
+                    System.out.println("Quantity must be greater than 0.");
+                    continue;
+                }
+                restock.addProduct(pid, qty);
+                p.setquantity(p.getquantity() + qty);
+                System.out.println("Added " + qty + " x " + p.getname());
+            } catch (ProductNotFoundException e) {
+                System.out.println(e.getMessage());
             }
-            
-            int qty = getIntInput("Quantity received: ");
-            restock.addProduct(pid, qty);
-            p.setquantity(p.getquantity() + qty);
-            
-            System.out.println("Added " + qty + " x " + p.getname());
             
             System.out.print("Add more? (yes/no): ");
             adding = scanner.nextLine().equalsIgnoreCase("yes");
@@ -489,6 +684,8 @@ public class Main {
         restock.setTotalCost(cost);
         restock.completeRestock();
         transactions.add(restock);
+        // persist updated stock and transaction
+        saveAllDataToFiles();
         
         restock.printRestockReceipt();
         System.out.println("\nRestock completed!");
@@ -535,59 +732,46 @@ public class Main {
         while (adding) {
             System.out.print("\nProduct ID: ");
             String pid = scanner.nextLine();
-            product p = findProductById(pid);
-            
-            if (p == null) {
-                System.out.println("Product not found!");
-                continue;
-            }
-            
-            System.out.println(" " + p.getname() + " - $" + p.getprice() + " (Stock: " + p.getquantity() + ")");
-            
-            // Handle prescription
-            if (p instanceof Prescribable) {
-                Prescribable presc = (Prescribable) p;
-                if (presc.requiresPrescription()) {
+            try {
+                product p = getProductOrThrow(pid);
+                System.out.println(" " + p.getname() + " - $" + p.getprice() + " (Stock: " + p.getquantity() + ")");
+
+                if (p instanceof Prescribable prescribable && prescribable.requiresPrescription()) {
                     System.out.print("Prescription ID: ");
-                    String rxId = scanner.nextLine();
-                    presc.setPrescriptionId(rxId);
+                    String rxId = scanner.nextLine().trim();
+                    if (rxId.isEmpty()) {
+                        throw new InvalidPrescriptionException("Prescription ID is required for " + p.getname());
+                    }
+                    prescribable.setPrescriptionId(rxId);
                 }
-            }
-            
-            // Check availability
-            if (!p.isAvailableForSale()) {
-                System.out.println(" Product not available for sale!");
-                continue;
-            }
-            
-            // Check expiration
-            if (p instanceof Expirable && ((Expirable) p).isExpired()) {
-                System.out.println("Product EXPIRED!");
-                continue;
-            }
-            
-            int qty = getIntInput("Quantity: ");
-            
-            if (qty > p.getquantity()) {
-                System.out.println("Not enough stock!");
-                continue;
-            }
-            
-            // Check OTC limits
-            if (p instanceof otcmedicine) {
-                otcmedicine otc = (otcmedicine) p;
-                if (otc.getPurchaseLimit() > 0 && qty > otc.getPurchaseLimit()) {
-                    System.out.println("Exceeds purchase limit of " + otc.getPurchaseLimit());
-                    continue;
+
+                if (!p.isAvailableForSale() && !(p instanceof PrescriptionMedicine)) {
+                    throw new ExpiredProductException("Product '" + p.getname() + "' is not approved for sale.");
                 }
+
+                ensureNotExpired(p);
+
+                int qty = getIntInput("Quantity: ");
+                validateStockRequest(p, qty);
+
+                if (p instanceof otcmedicine otc && otc.getPurchaseLimit() > 0 && qty > otc.getPurchaseLimit()) {
+                    throw new InsufficientStockException(
+                        "Purchase limit of " + otc.getPurchaseLimit() + " exceeded for " + p.getname());
+                }
+
+                ensureNoDrugInteraction(p, sale);
+
+                sale.addProduct(pid, qty);
+                subtotal += p.getprice() * qty;
+                p.setquantity(p.getquantity() - qty);
+
+                System.out.println(" Added: " + qty + " x " + p.getname() + " = $" + (p.getprice() * qty));
+            } catch (ProductNotFoundException | InvalidPrescriptionException |
+                     InsufficientStockException | ExpiredProductException |
+                     DrugInteractionException e) {
+                System.out.println(" Error: " + e.getMessage());
             }
-            
-            sale.addProduct(pid, qty);
-            subtotal += p.getprice() * qty;
-            p.setquantity(p.getquantity() - qty);
-            
-            System.out.println(" Added: " + qty + " x " + p.getname() + " = $" + (p.getprice() * qty));
-            
+
             System.out.print("Add more? (yes/no): ");
             adding = scanner.nextLine().equalsIgnoreCase("yes");
         }
@@ -623,6 +807,8 @@ public class Main {
         customer.addLoyaltyPoints(sale.getTotalAmount());
         customer.addPurchase(txnId);
         transactions.add(sale);
+        // persist updated stock, customer loyalty and sales
+        saveAllDataToFiles();
         
         sale.printReceipt();
         System.out.println("\nNew loyalty balance: " + customer.getLoyaltyPoints());
@@ -630,7 +816,7 @@ public class Main {
     }
     
     private static void processReturn() {
-        System.out.println("\n↩PROCESS RETURN");
+        System.out.println("\nPROCESS RETURN");
         
         System.out.print("Customer ID: ");
         String custId = scanner.nextLine();
@@ -664,23 +850,21 @@ public class Main {
         while (adding) {
             System.out.print("\nProduct ID to return: ");
             String pid = scanner.nextLine();
-            product p = findProductById(pid);
-            
-            if (p == null) {
-                System.out.println("Product not found!");
-                continue;
+            try {
+                product p = getProductOrThrow(pid);
+                int qty = getIntInput("Quantity to return: ");
+                if (qty <= 0) {
+                    System.out.println("Quantity must be greater than 0.");
+                    continue;
+                }
+                returnTxn.addProduct(pid, qty);
+                double refund = p.getprice() * qty;
+                refundTotal += refund;
+                p.setquantity(p.getquantity() + qty);
+                System.out.println("Returning " + qty + " x " + p.getname() + " = $" + refund);
+            } catch (ProductNotFoundException e) {
+                System.out.println(e.getMessage());
             }
-            
-            int qty = getIntInput("Quantity to return: ");
-            
-            returnTxn.addProduct(pid, qty);
-            double refund = p.getprice() * qty;
-            refundTotal += refund;
-            
-            // Return stock
-            p.setquantity(p.getquantity() + qty);
-            
-            System.out.println("Returning " + qty + " x " + p.getname() + " = $" + refund);
             
             System.out.print("Return more items? (yes/no): ");
             adding = scanner.nextLine().equalsIgnoreCase("yes");
@@ -699,6 +883,8 @@ public class Main {
         returnTxn.completeReturn();
         
         transactions.add(returnTxn);
+        // persist updated stock and transactions
+        saveAllDataToFiles();
         returnTxn.printReturnReceipt();
         
         System.out.println("\n Return processed successfully!");
@@ -755,6 +941,7 @@ public class Main {
         String address = scanner.nextLine();
         
         customers.add(new Customer(id, name, phone, email, address));
+        saveAllDataToFiles();
         System.out.println("Customer registered!");
     }
     
@@ -817,6 +1004,14 @@ public class Main {
         }
         return null;
     }
+
+    private static product getProductOrThrow(String id) {
+        product found = findProductById(id);
+        if (found == null) {
+            throw new ProductNotFoundException("Product with ID '" + id + "' not found.");
+        }
+        return found;
+    }
     
     private static Customer findCustomerById(String id) {
         for (Customer c : customers) {
@@ -830,6 +1025,46 @@ public class Main {
             if (t.getTransactionId().equalsIgnoreCase(id.trim())) return t;
         }
         return null;
+    }
+
+    private static void validateStockRequest(product p, int requestedQty) {
+        if (requestedQty <= 0) {
+            throw new InsufficientStockException("Quantity must be greater than zero.");
+        }
+        if (requestedQty > p.getquantity()) {
+            throw new InsufficientStockException(
+                "Requested " + requestedQty + " but only " + p.getquantity() + " units of " + p.getname() + " are available.");
+        }
+    }
+
+    private static void ensureNotExpired(product p) {
+        if (p instanceof Expirable exp && exp.isExpired()) {
+            throw new ExpiredProductException("Product '" + p.getname() + "' is expired and cannot be sold.");
+        }
+    }
+
+    private static void ensureNoDrugInteraction(product candidate, Sale currentSale) {
+        if (!(candidate instanceof medicine candidateMed)) {
+            return;
+        }
+        for (String pid : currentSale.getProductIds()) {
+            product existing = findProductById(pid);
+            if (existing instanceof medicine existingMed) {
+                boolean sameIngredient = existingMed.getActiveIngredient() != null &&
+                                         existingMed.getActiveIngredient().equalsIgnoreCase(candidateMed.getActiveIngredient());
+                if (!sameIngredient) {
+                    continue;
+                }
+                boolean prescriptionWithOtc =
+                    (existing instanceof PrescriptionMedicine && candidate instanceof otcmedicine) ||
+                    (existing instanceof otcmedicine && candidate instanceof PrescriptionMedicine);
+                if (prescriptionWithOtc) {
+                    throw new DrugInteractionException(
+                        "Combining " + existing.getname() + " with " + candidate.getname() +
+                        " is blocked because they share the active ingredient " + candidateMed.getActiveIngredient() + ".");
+                }
+            }
+        }
     }
     
     private static int getIntInput(String prompt) {

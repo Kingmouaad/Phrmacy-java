@@ -1,4 +1,4 @@
-package models.interfaces;
+package com.pharmacy.interfaces;
 
 public interface Prescribable {
     // Does this product require a prescription?

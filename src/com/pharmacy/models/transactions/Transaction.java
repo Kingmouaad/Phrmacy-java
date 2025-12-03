@@ -1,4 +1,4 @@
-package models.transaction;
+package com.pharmacy.models.transactions;
 import java.time.LocalDateTime;
 public abstract class Transaction {
     protected String transactionId;
