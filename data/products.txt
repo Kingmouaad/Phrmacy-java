@@ -1,4 +1,4 @@
 TYPE|ID|NAME|PRICE|QTY
-Prescription Medicine|PM001|Amoxicillin 500mg|25.00|50
+Prescription Medicine|PM001|Amoxicillin 500mg|25.00|48
 Over-The-Counter Medicine|OTC001|Ibuprofen 200mg|8.99|100
 Medical Device|DEV001|Digital Thermometer|15.99|25
