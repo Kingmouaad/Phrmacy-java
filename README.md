@@ -234,5 +234,3 @@ The project consists of **15 main classes** organized into:
 Pharmacy Management System - Java Console Application
 
 ---
-
-_For questions or issues, please refer to the code documentation or contact the development team._
