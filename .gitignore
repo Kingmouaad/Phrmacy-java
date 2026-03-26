@@ -1,21 +1,15 @@
-# Build output directory
-build/
-
 # Compiled class files
+out/
+build/
 *.class
 
-# IDE files
-.idea/
-*.iml
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
+# SQLite Database
+pharmacy.db
+*.db
 
 # Log files
 *.log
 
+# Windows specific
+Desktop.ini
+$RECYCLE.BIN/

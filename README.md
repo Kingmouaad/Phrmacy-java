@@ -86,8 +86,7 @@ pharmacy/
 │   │   └── ObjectInspector.java
 │   ├── exceptions/                   # Custom exceptions
 │   ├── interfaces/                   # Interface definitions
-│   ├── models/                       # Data models
-│   └── services/                     # Business logic
+│   └── models/                       # Data models
 ├── lib/                              # External Dependencies
 │   ├── sqlite-jdbc-3.45.1.0.jar
 │   └── jgrapht-core-1.5.2.jar
@@ -102,7 +101,7 @@ pharmacy/
 - **Inheritance**: Product hierarchy with abstract base classes
 - **Interface Segregation**: Expirable, Prescribable, Sellable interfaces
 - **Exception Handling**: Custom exceptions for better error management
-- **Data Persistence**: Text-based file storage with pipe-delimited format
+- **Data Persistence**: Backed by a relational database (SQLite) accessed through the DAO (Data Access Object) pattern.
 
 ### Custom Exceptions
 
@@ -114,16 +113,13 @@ pharmacy/
 | `InvalidPrescriptionException` | Ensures prescription-only items include a prescription ID                        |
 | `DrugInteractionException`     | Blocks dangerous OTC/prescription combinations with identical active ingredients |
 
-### Data Persistence
+### Data Persistence (SQLite)
 
-The system uses text files for data persistence with pipe (`|`) delimiters:
+The system uses a unified **SQLite** database (`pharmacy.db`) via the JDBC driver, replacing the legacy file-based storage.
 
-- **products.txt**: Product type, ID, name, price, and quantity
-- **stock.txt**: Product ID, quantity, and stock status
-- **customers.txt**: Customer ID, name, phone, email, and loyalty points
-- **sales.txt**: Transaction ID, type, total amount, and status
-
-Data is automatically loaded on startup and saved after each modification.
+- Fully relational schema (`src/schema.sql`) defining robust interactions between users, products, sales, and customers.
+- Database access is abstracted entirely behind DAO components (Data Access Objects).
+- Atomic **JDBC Transactions** in `SaleDAO` prevent partial state corruption (e.g., if inventory is deducted but loyalty point updates fail, the entire transaction rolls back automatically).
 
 ## Getting Started
 
@@ -134,15 +130,17 @@ Data is automatically loaded on startup and saved after each modification.
 
 ### Compilation & Running (New GUI Version)
 
-The system now uses a modern Java Swing GUI, a SQLite database, and specialized data structures. You need to include the dependency JARs in the classpath when compiling and running.
+The system now uses a modern Java Swing GUI, a SQLite database, and specialized data structures. You need to include the dependency JARs in the classpath when compiling and running. Ensure you are in the project root directory.
 
 **Windows/PowerShell:**
 ```powershell
 # 1. Compile all Java files
-javac -cp "lib/sqlite-jdbc-3.45.1.0.jar;lib/jgrapht-core-1.5.2.jar;src" -d out src/com/pharmacy/*.java src/com/pharmacy/db/*.java src/com/pharmacy/exceptions/*.java src/com/pharmacy/interfaces/*.java src/com/pharmacy/models/persons/*.java src/com/pharmacy/models/products/*.java src/com/pharmacy/models/transactions/*.java src/com/pharmacy/services/*.java src/com/pharmacy/datastructures/*.java src/com/pharmacy/generics/*.java src/com/pharmacy/reflection/*.java src/com/pharmacy/gui/*.java
+$libraries = "lib/sqlite-jdbc-3.45.1.0.jar;lib/jgrapht-core-1.5.2.jar"
+$javaFiles = Get-ChildItem -Path "src" -Filter "*.java" -Recurse | Select-Object -ExpandProperty FullName
+javac -cp "$libraries;src" -d out $javaFiles
 
 # 2. Run the new GUI Application
-java -cp "lib/sqlite-jdbc-3.45.1.0.jar;lib/jgrapht-core-1.5.2.jar;out" com.pharmacy.gui.GUIMain
+java -cp "$libraries;out" com.pharmacy.gui.GUIMain
 ```
 
 ### Default Login (GUI)
@@ -202,7 +200,8 @@ The project consists of **15 main classes** organized into:
 - **4 Person model classes**
 - **6 Product model classes**
 - **4 Transaction model classes**
-- **5 Service classes**
+- **5 GUI Panel classes & Theme classes**
+- **10 Core Database DAO classes**
 - **1 Main application class**
 
 ## Recent Improvements
@@ -213,10 +212,9 @@ The project consists of **15 main classes** organized into:
 
 ## Notes
 
-- All data is persisted in text files in the `data/` directory
-- The system automatically creates initial data files if they don't exist
-- Access control is enforced based on pharmacist access level
-- The system maintains transaction history for audit purposes
+- All data is securely handled via **SQLite**, automatically initialized on the first run of the application.
+- Advanced Generic Data Structures (`HashMap`, `TreeMap`, `LinkedList`) drastically improve speed by bypassing database hits for lookups and filtering operations. 
+- Access control restricts specific panels (like Inventory) to senior pharmacists, using our defined object hierarchy.
 
 ## Author Benmalti Mouaad
 
