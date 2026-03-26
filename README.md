@@ -2,11 +2,11 @@
 
 A comprehensive Java console application for managing pharmacy operations including product inventory, customer management, sales processing, and transaction tracking. Built with object-oriented design principles and clean architecture.
 
-## 📋 Project Overview
+## Project Overview
 
 The Pharmacy Management System is a command-line application that helps pharmacy staff manage daily operations efficiently. It provides features for product management, inventory control, customer relationship management, and sales processing with built-in safety checks for drug interactions, prescription validation, and expiration tracking.
 
-## 🎯 Key Features
+## Key Features
 
 ### 1. **Product Management**
 
@@ -59,7 +59,7 @@ The Pharmacy Management System is a command-line application that helps pharmacy
   - **Senior Pharmacist** (Level 2): Can manage inventory
   - **Pharmacy Manager** (Level 3): Full system access
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
@@ -109,7 +109,7 @@ pharmacy/
 └── README.md
 ```
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Design Patterns & Principles
 
@@ -140,7 +140,7 @@ The system uses text files for data persistence with pipe (`|`) delimiters:
 
 Data is automatically loaded on startup and saved after each modification.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -162,7 +162,7 @@ java -cp build com.pharmacy.Main
 - **Pharmacist ID**: `PHR111`
 - **Access Level**: Manager (Level 3)
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Main Menu Options
 
@@ -196,7 +196,7 @@ java -cp build com.pharmacy.Main
 5. **View Transactions**
    - View all transaction history
 
-## 🛡️ Safety Features
+## Safety Features
 
 1. **Drug Interaction Detection**: Prevents selling prescription and OTC medicines with the same active ingredient in a single transaction
 2. **Prescription Validation**: Ensures prescription medicines are only sold with valid prescription IDs
@@ -204,7 +204,7 @@ java -cp build com.pharmacy.Main
 4. **Stock Validation**: Prevents overselling by checking available stock
 5. **Purchase Limits**: Enforces quantity limits on OTC medicines to prevent abuse
 
-## 📊 Class Count
+## Class Count
 
 The project consists of **15 main classes** organized into:
 
@@ -216,20 +216,20 @@ The project consists of **15 main classes** organized into:
 - **5 Service classes**
 - **1 Main application class**
 
-## 🔄 Recent Improvements
+## Recent Improvements
 
 - **Code Refactoring**: Extracted business logic from Main.java into dedicated service classes, reducing Main.java from 1,091 lines to 254 lines (~77% reduction)
 - **Better Organization**: Separated concerns into service layer for improved maintainability
 - **Clean Architecture**: Follows separation of concerns principle
 
-## 📝 Notes
+## Notes
 
 - All data is persisted in text files in the `data/` directory
 - The system automatically creates initial data files if they don't exist
 - Access control is enforced based on pharmacist access level
 - The system maintains transaction history for audit purposes
 
-## 👤 Author Benmalti Mouaad
+## Author Benmalti Mouaad
 
 Pharmacy Management System - Java Console Application
 
