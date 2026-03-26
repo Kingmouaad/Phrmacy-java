@@ -10,34 +10,34 @@
 - [ ] Create `PrescriptionDAO.java` (prescription operations)
 - [ ] Create `InteractionDAO.java` (drug interactions)
 - [ ] Create `UserDAO.java` (authentication)
-- [x] Update services to use DAOs instead of file persistence
-- [x] Verify database layer works
+- [ ] Update services to use DAOs instead of file persistence
+- [ ] Verify database layer works
 
 ## Phase 2: Complex Data Structures
-- [x] HashMap for product catalog
-- [x] TreeMap for expiration tracking
-- [x] LinkedList for sales history
-- [x] HashSet for allergens per customer
-- [x] JGraphT drug interaction graph
+- [ ] HashMap for product catalog
+- [ ] TreeMap for expiration tracking
+- [ ] LinkedList for sales history
+- [ ] HashSet for allergens per customer
+- [ ] JGraphT drug interaction graph
 
 ## Phase 3: Generics
-- [x] StockManager<T extends product>
-- [x] PrescriptionValidator<T extends medicine>
-- [x] Generic sell() method
+- [ ] StockManager<T extends product>
+- [ ] PrescriptionValidator<T extends medicine>
+- [ ] Generic sell() method
 
 ## Phase 4: Reflection
-- [x] ObjectInspector utility
+- [ ] ObjectInspector utility
 
 ## Phase 5: GUI (JavaFX/Swing)
-- [x] Login screen
-- [x] Main dashboard
-- [x] Sales terminal
-- [x] Stock dashboard
-- [x] Customer management
-- [x] Prescription management
-- [x] Statistics charts
+- [ ] Login screen
+- [ ] Main dashboard
+- [ ] Sales terminal
+- [ ] Stock dashboard
+- [ ] Customer management
+- [ ] Prescription management
+- [ ] Statistics charts
 
 ## Phase 6: Integration & Polish
-- [x] Wire GUI ↔ Services ↔ DAOs
-- [x] README.md update
-- [x] Final testing
+- [ ] Wire GUI ↔ Services ↔ DAOs
+- [ ] README.md update
+- [ ] Final testing

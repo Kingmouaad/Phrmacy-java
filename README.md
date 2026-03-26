@@ -66,46 +66,31 @@ The Pharmacy Management System is a command-line application that helps pharmacy
 ```
 pharmacy/
 ├── src/com/pharmacy/
-│   ├── Main.java                    # Application entry point
-│   ├── exceptions/                   # Custom exception classes
-│   │   ├── DrugInteractionException.java
-│   │   ├── ExpiredProductException.java
-│   │   ├── InsufficientStockException.java
-│   │   ├── InvalidPrescriptionException.java
-│   │   └── ProductNotFoundException.java
+│   ├── gui/                          # Phase 5: Swing GUI Layer
+│   │   ├── GUIMain.java              # GUI Entry Point
+│   │   ├── PharmacyTheme.java
+│   │   └── *Panel.java               # Various Dashboard Panels
+│   ├── db/                           # Phase 1: SQLite DAOs
+│   │   ├── DatabaseConnection.java
+│   │   └── *DAO.java
+│   ├── datastructures/               # Phase 2: Complex Structures
+│   │   ├── ProductCatalog.java       # HashMap
+│   │   ├── ExpirationTracker.java    # TreeMap
+│   │   ├── SalesHistory.java         # LinkedList
+│   │   └── DrugInteractionGraph.java # JGraphT
+│   ├── generics/                     # Phase 3: Generic Classes
+│   │   ├── StockManager.java
+│   │   ├── PrescriptionValidator.java
+│   │   └── PharmacyOperations.java
+│   ├── reflection/                   # Phase 4: Runtime Analysis
+│   │   └── ObjectInspector.java
+│   ├── exceptions/                   # Custom exceptions
 │   ├── interfaces/                   # Interface definitions
-│   │   ├── Expirable.java
-│   │   ├── Prescribable.java
-│   │   └── Sellable.java
-│   ├── models/
-│   │   ├── persons/                  # Person-related classes
-│   │   │   ├── Person.java           # Base class
-│   │   │   ├── Customer.java
-│   │   │   ├── Pharmacist.java
-│   │   │   └── Doctor.java
-│   │   ├── products/                 # Product classes
-│   │   │   ├── product.java          # Abstract base class
-│   │   │   ├── medicine.java         # Abstract medicine class
-│   │   │   ├── PrescriptionMedicine.java
-│   │   │   ├── otcmedicine.java
-│   │   │   ├── medicaledevice.java
-│   │   │   └── Supplement.java
-│   │   └── transactions/             # Transaction classes
-│   │       ├── Transaction.java      # Abstract base class
-│   │       ├── Sale.java
-│   │       ├── Return.java
-│   │       └── Restock.java
-│   └── services/                     # Service layer (business logic)
-│       ├── DataService.java          # File I/O operations
-│       ├── ProductService.java       # Product management
-│       ├── CustomerService.java      # Customer management
-│       ├── InventoryService.java     # Inventory operations
-│       └── SaleService.java          # Sales processing
-├── data/                             # Data persistence files
-│   ├── products.txt
-│   ├── stock.txt
-│   ├── customers.txt
-│   └── sales.txt
+│   ├── models/                       # Data models
+│   └── services/                     # Business logic
+├── lib/                              # External Dependencies
+│   ├── sqlite-jdbc-3.45.1.0.jar
+│   └── jgrapht-core-1.5.2.jar
 └── README.md
 ```
 
@@ -147,20 +132,24 @@ Data is automatically loaded on startup and saved after each modification.
 - Java Development Kit (JDK) 8 or higher
 - A terminal/command prompt
 
-### Compilation
+### Compilation & Running (New GUI Version)
 
-```bash
-# Compile all Java files
-javac -d build -sourcepath src src/com/pharmacy/Main.java
+The system now uses a modern Java Swing GUI, a SQLite database, and specialized data structures. You need to include the dependency JARs in the classpath when compiling and running.
 
-# Run the application
-java -cp build com.pharmacy.Main
+**Windows/PowerShell:**
+```powershell
+# 1. Compile all Java files
+javac -cp "lib/sqlite-jdbc-3.45.1.0.jar;lib/jgrapht-core-1.5.2.jar;src" -d out src/com/pharmacy/*.java src/com/pharmacy/db/*.java src/com/pharmacy/exceptions/*.java src/com/pharmacy/interfaces/*.java src/com/pharmacy/models/persons/*.java src/com/pharmacy/models/products/*.java src/com/pharmacy/models/transactions/*.java src/com/pharmacy/services/*.java src/com/pharmacy/datastructures/*.java src/com/pharmacy/generics/*.java src/com/pharmacy/reflection/*.java src/com/pharmacy/gui/*.java
+
+# 2. Run the new GUI Application
+java -cp "lib/sqlite-jdbc-3.45.1.0.jar;lib/jgrapht-core-1.5.2.jar;out" com.pharmacy.gui.GUIMain
 ```
 
-### Default Login
+### Default Login (GUI)
 
-- **Pharmacist ID**: `PHR111`
-- **Access Level**: Manager (Level 3)
+- **Username**: `admin`
+- **Password**: `admin123`
+*(Auto-created on first run by the SQLite database script)*
 
 ## Usage Guide
 

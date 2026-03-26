@@ -38,6 +38,6 @@
 - [x] Statistics charts
 
 ## Phase 6: Integration & Polish
-- [x] Wire GUI ↔ Services ↔ DAOs
-- [x] README.md update
-- [x] Final testing
+- [/] Wire GUI ↔ Services ↔ DAOs
+- [/] README.md update
+- [/] Final testing
