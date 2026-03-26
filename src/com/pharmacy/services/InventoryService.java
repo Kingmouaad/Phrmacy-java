@@ -1,24 +1,28 @@
 package com.pharmacy.services;
 
+import com.pharmacy.db.ProductDAO;
+import com.pharmacy.db.RestockDAO;
 import com.pharmacy.exceptions.*;
 import com.pharmacy.interfaces.*;
 import com.pharmacy.models.products.*;
 import com.pharmacy.models.persons.*;
 import com.pharmacy.models.transactions.*;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class InventoryService {
-    private List<product> products;
-    private List<Transaction> transactions;
+    private ProductDAO productDAO;
+    private RestockDAO restockDAO;
     private Scanner scanner;
     private Pharmacist currentPharmacist;
     private ProductService productService;
     
-    public InventoryService(List<product> products, List<Transaction> transactions, 
-                            Scanner scanner, Pharmacist currentPharmacist, ProductService productService) {
-        this.products = products;
-        this.transactions = transactions;
+    public InventoryService(Scanner scanner, Pharmacist currentPharmacist, ProductService productService) {
+        this.productDAO = new ProductDAO();
+        this.restockDAO = new RestockDAO();
         this.scanner = scanner;
         this.currentPharmacist = currentPharmacist;
         this.productService = productService;
@@ -26,11 +30,16 @@ public class InventoryService {
     
     public void checkStockLevels() {
         System.out.println("\nSTOCK LEVELS");
-        for (product p : products) {
-            String status = p.getquantity() > 20 ? "u have more then 20 " : 
-                           p.getquantity() > 5 ? "u have more then 5 " : "u have lesss then 5 ";
-            System.out.println(status + " " + p.getid() + " - " + p.getname() + 
-                             ": " + p.getquantity() + " units");
+        try {
+            List<product> products = productDAO.findAll();
+            for (product p : products) {
+                String status = p.getquantity() > 20 ? "u have more then 20 " : 
+                               p.getquantity() > 5 ? "u have more then 5 " : "u have lesss then 5 ";
+                System.out.println(status + " " + p.getid() + " - " + p.getname() + 
+                                 ": " + p.getquantity() + " units");
+            }
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
         }
     }
     
@@ -38,31 +47,39 @@ public class InventoryService {
         int threshold = getIntInput("\nMinimum stock threshold: ");
         
         System.out.println("\nLOW STOCK ITEMS:");
-        boolean foundLow = false;
-        for (product p : products) {
-            if (p.getquantity() <= threshold) {
-                System.out.println("  - " + p.getname() + " - Only " + p.getquantity() + " left!");
-                foundLow = true;
+        try {
+            List<product> products = productDAO.findAll();
+            boolean foundLow = false;
+            for (product p : products) {
+                if (p.getquantity() <= threshold) {
+                    System.out.println("  - " + p.getname() + " - Only " + p.getquantity() + " left!");
+                    foundLow = true;
+                }
             }
+            if (!foundLow) System.out.println("All products above threshold.");
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
         }
-        
-        if (!foundLow) System.out.println("All products above threshold.");
     }
     
     public void checkExpirations() {
         System.out.println("\nEXPIRATION CHECK");
-        
-        for (product p : products) {
-            if (p instanceof Expirable) {
-                Expirable exp = (Expirable) p;
-                long days = exp.getDaysUntilExpiration();
-                
-                if (exp.isExpired()) {
-                    System.out.println("EXPIRED: " + p.getname() + " - REMOVE NOW!");
-                } else if (days <= 30) {
-                    System.out.println("WARNING: " + p.getname() + " - " + days + " days left");
+        try {
+            List<product> products = productDAO.findAll();
+            for (product p : products) {
+                if (p instanceof Expirable) {
+                    Expirable exp = (Expirable) p;
+                    long days = exp.getDaysUntilExpiration();
+                    
+                    if (exp.isExpired()) {
+                        System.out.println("EXPIRED: " + p.getname() + " - REMOVE NOW!");
+                    } else if (days <= 30) {
+                        System.out.println("WARNING: " + p.getname() + " - " + days + " days left");
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
         }
     }
     
@@ -73,12 +90,15 @@ public class InventoryService {
         }
         
         System.out.println("\nRESTOCK");
-        String txnId = "RST" + String.format("%03d", transactions.size() + 1);
+        String txnId = "RST" + System.currentTimeMillis(); // Simple unique ID generator
         
         System.out.print("Supplier ID: ");
         String supplierId = scanner.nextLine();
         
         Restock restock = new Restock(txnId, currentPharmacist.getPersonId(), supplierId);
+        
+        List<String> productIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
         
         boolean adding = true;
         while (adding) {
@@ -91,9 +111,12 @@ public class InventoryService {
                     System.out.println("Quantity must be greater than 0.");
                     continue;
                 }
+                
                 restock.addProduct(pid, qty);
-                p.setquantity(p.getquantity() + qty);
-                System.out.println("Added " + qty + " x " + p.getname());
+                productIds.add(pid);
+                quantities.add(qty);
+                
+                System.out.println("Added " + qty + " x " + p.getname() + " to restock list.");
             } catch (ProductNotFoundException e) {
                 System.out.println(e.getMessage());
             }
@@ -102,13 +125,22 @@ public class InventoryService {
             adding = scanner.nextLine().equalsIgnoreCase("yes");
         }
         
+        if (productIds.isEmpty()) {
+            System.out.println("Restock cancelled (no items).");
+            return;
+        }
+        
         double cost = getDoubleInput("\nTotal cost: $");
         restock.setTotalCost(cost);
         restock.completeRestock();
-        transactions.add(restock);
         
-        restock.printRestockReceipt();
-        System.out.println("\nRestock completed!");
+        try {
+            restockDAO.processRestock(restock, productIds, quantities, cost, supplierId);
+            restock.printRestockReceipt();
+            System.out.println("\nRestock completed and saved to database!");
+        } catch (SQLException e) {
+            System.out.println("Database error during restock: " + e.getMessage());
+        }
     }
     
     private int getIntInput(String prompt) {
@@ -133,4 +165,3 @@ public class InventoryService {
         }
     }
 }
-

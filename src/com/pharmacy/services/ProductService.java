@@ -1,48 +1,55 @@
 package com.pharmacy.services;
 
+import com.pharmacy.db.ProductDAO;
 import com.pharmacy.exceptions.*;
 import com.pharmacy.interfaces.*;
 import com.pharmacy.models.products.*;
 import com.pharmacy.models.persons.*;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
 public class ProductService {
-    private List<product> products;
+    private ProductDAO productDAO;
     private Scanner scanner;
     private Pharmacist currentPharmacist;
     
-    public ProductService(List<product> products, Scanner scanner, Pharmacist currentPharmacist) {
-        this.products = products;
+    public ProductService(Scanner scanner, Pharmacist currentPharmacist) {
+        this.productDAO = new ProductDAO();
         this.scanner = scanner;
         this.currentPharmacist = currentPharmacist;
     }
     
     public void viewAllProducts() {
-        System.out.println("\n ALL PRODUCTS (" + products.size() + " items)");
-        if (products.isEmpty()) {
-            System.out.println("No products available.");
-            return;
-        }
-        
-        for (product p : products) {
-            System.out.println("\n" + p);
-            System.out.println("   Available: " + (p.isAvailableForSale() ? "YES" : "NO"));
-            
-            if (p instanceof Expirable) {
-                Expirable exp = (Expirable) p;
-                LocalDate date = exp.getExpirationDate();
-                if (date == null) {
-                    System.out.println("   Expiration date: not set");
-                } else if (exp.isExpired()) {
-                    System.out.println("   EXPIRED on " + date);
-                } else {
-                    long days = exp.getDaysUntilExpiration();
-                    System.out.println("   Expires in " + days + " days (on " + date + ")");
-                }
+        try {
+            List<product> products = productDAO.findAll();
+            System.out.println("\n ALL PRODUCTS (" + products.size() + " items)");
+            if (products.isEmpty()) {
+                System.out.println("No products available.");
+                return;
             }
-            System.out.println("   " + "─".repeat(50));
+            
+            for (product p : products) {
+                System.out.println("\n" + p);
+                System.out.println("   Available: " + (p.isAvailableForSale() ? "YES" : "NO"));
+                
+                if (p instanceof Expirable) {
+                    Expirable exp = (Expirable) p;
+                    LocalDate date = exp.getExpirationDate();
+                    if (date == null) {
+                        System.out.println("   Expiration date: not set");
+                    } else if (exp.isExpired()) {
+                        System.out.println("   EXPIRED on " + date);
+                    } else {
+                        long days = exp.getDaysUntilExpiration();
+                        System.out.println("   Expires in " + days + " days (on " + date + ")");
+                    }
+                }
+                System.out.println("   " + "─".repeat(50));
+            }
+        } catch (SQLException e) {
+            System.out.println(" Database error: " + e.getMessage());
         }
     }
     
@@ -86,7 +93,7 @@ public class ProductService {
                     return;
             }
             
-            products.add(newProduct);
+            productDAO.insertWithStock(newProduct, qty, 10); // default threshold of 10
             System.out.println(" Product added successfully!");
         } catch (Exception e) {
             System.out.println(" Error: " + e.getMessage());
@@ -97,16 +104,24 @@ public class ProductService {
         System.out.print("\n🔍 Search (ID or Name): ");
         String query = scanner.nextLine().toLowerCase();
         
-        boolean found = false;
-        for (product p : products) {
-            if (p.getid().toLowerCase().contains(query) || 
-                p.getname().toLowerCase().contains(query)) {
-                System.out.println("\n FOUND: " + p);
-                found = true;
+        try {
+            product byId = productDAO.findById(query.toUpperCase());
+            if (byId != null) {
+                System.out.println("\n FOUND BY ID: " + byId);
+                return;
             }
+            
+            List<product> products = productDAO.findByName(query);
+            if (products.isEmpty()) {
+                System.out.println(" No products found.");
+            } else {
+                for (product p : products) {
+                    System.out.println("\n FOUND: " + p);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(" Database error: " + e.getMessage());
         }
-        
-        if (!found) System.out.println(" No products found.");
     }
     
     public void updateProduct() {
@@ -126,30 +141,37 @@ public class ProductService {
         
         System.out.println("Current: " + p.getname());
         System.out.println("1. Update Price");
-        System.out.println("2. Update Quantity");
+        System.out.println("2. Update Quantity (Restock)");
         System.out.println("3. Update Name");
         
         int choice = getIntInput("Choose: ");
         
-        switch (choice) {
-            case 1:
-                double newPrice = getDoubleInput("New price: $");
-                p.setprice(newPrice);
-                System.out.println("Price updated!");
-                break;
-            case 2:
-                int newQty = getIntInput("New quantity: ");
-                p.setquantity(newQty);
-                System.out.println(" Quantity updated!");
-                break;
-            case 3:
-                System.out.print("New name: ");
-                String newName = scanner.nextLine();
-                p.setname(newName);
-                System.out.println(" Name updated!");
-                break;
-            default:
-                System.out.println(" Invalid choice!");
+        try {
+            switch (choice) {
+                case 1:
+                    double newPrice = getDoubleInput("New price: $");
+                    p.setprice(newPrice);
+                    productDAO.update(p);
+                    System.out.println("Price updated!");
+                    break;
+                case 2:
+                    int newQty = getIntInput("New total quantity: ");
+                    p.setquantity(newQty);
+                    productDAO.updateStock(p.getid(), newQty);
+                    System.out.println(" Quantity updated!");
+                    break;
+                case 3:
+                    System.out.print("New name: ");
+                    String newName = scanner.nextLine();
+                    p.setname(newName);
+                    productDAO.update(p);
+                    System.out.println(" Name updated!");
+                    break;
+                default:
+                    System.out.println(" Invalid choice!");
+            }
+        } catch (SQLException e) {
+            System.out.println(" Database error: " + e.getMessage());
         }
     }
     
@@ -170,18 +192,24 @@ public class ProductService {
         
         System.out.print("Delete '" + p.getname() + "'? (yes/no): ");
         if (scanner.nextLine().equalsIgnoreCase("yes")) {
-            products.remove(p);
-            System.out.println(" Product deleted!");
+            try {
+                productDAO.delete(p.getid());
+                System.out.println(" Product deleted!");
+            } catch (SQLException e) {
+                System.out.println(" Database error: " + e.getMessage());
+            }
         } else {
             System.out.println("Cancelled.");
         }
     }
     
     public product findProductById(String id) {
-        for (product p : products) {
-            if (p.getid().equalsIgnoreCase(id.trim())) return p;
+        try {
+            return productDAO.findById(id.trim());
+        } catch (SQLException e) {
+            System.out.println(" Database error: " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
     public product getProductOrThrow(String id) {
@@ -278,4 +306,3 @@ public class ProductService {
         }
     }
 }
-

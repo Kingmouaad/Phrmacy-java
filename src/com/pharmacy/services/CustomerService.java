@@ -1,26 +1,34 @@
 package com.pharmacy.services;
 
+import com.pharmacy.db.CustomerDAO;
+import com.pharmacy.db.SaleDAO;
 import com.pharmacy.models.persons.*;
 import com.pharmacy.models.transactions.*;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
 public class CustomerService {
-    private List<Customer> customers;
-    private List<Transaction> transactions;
+    private CustomerDAO customerDAO;
+    private SaleDAO saleDAO;
     private Scanner scanner;
     
-    public CustomerService(List<Customer> customers, List<Transaction> transactions, Scanner scanner) {
-        this.customers = customers;
-        this.transactions = transactions;
+    public CustomerService(Scanner scanner) {
+        this.customerDAO = new CustomerDAO();
+        this.saleDAO = new SaleDAO();
         this.scanner = scanner;
     }
     
     public void viewAllCustomers() {
-        System.out.println("\nALL CUSTOMERS (" + customers.size() + ")");
-        for (Customer c : customers) {
-            System.out.println(c);
-            System.out.println("─".repeat(50));
+        try {
+            List<Customer> customers = customerDAO.findAll();
+            System.out.println("\nALL CUSTOMERS (" + customers.size() + ")");
+            for (Customer c : customers) {
+                System.out.println(c);
+                System.out.println("─".repeat(50));
+            }
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
         }
     }
     
@@ -43,8 +51,12 @@ public class CustomerService {
         System.out.print("Address: ");
         String address = scanner.nextLine();
         
-        customers.add(new Customer(id, name, phone, email, address));
-        System.out.println("Customer registered!");
+        try {
+            customerDAO.insert(new Customer(id, name, phone, email, address));
+            System.out.println("Customer registered!");
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
     }
     
     public void viewCustomerDetails() {
@@ -60,7 +72,8 @@ public class CustomerService {
     
     public void viewPurchaseHistory() {
         System.out.print("\nCustomer ID: ");
-        Customer c = findCustomerById(scanner.nextLine());
+        String customerId = scanner.nextLine();
+        Customer c = findCustomerById(customerId);
         
         if (c == null) {
             System.out.println("Not found!");
@@ -68,34 +81,30 @@ public class CustomerService {
         }
         
         System.out.println("\nPURCHASE HISTORY: " + c.getFullName());
-        List<String> history = c.getPurchaseHistory();
         
-        if (history.isEmpty()) {
-            System.out.println("No purchases yet.");
-            return;
-        }
-        
-        for (String txnId : history) {
-            Transaction txn = findTransactionById(txnId);
-            if (txn != null) {
-                System.out.println("\n" + txn);
+        try {
+            List<Sale> history = saleDAO.findByCustomer(customerId);
+            
+            if (history.isEmpty()) {
+                System.out.println("No purchases yet.");
+                return;
+            }
+            
+            for (Sale sale : history) {
+                System.out.println("\n" + sale);
                 System.out.println("─".repeat(50));
             }
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
         }
     }
     
     public Customer findCustomerById(String id) {
-        for (Customer c : customers) {
-            if (c.getPersonId().equalsIgnoreCase(id.trim())) return c;
+        try {
+            return customerDAO.findById(id.trim());
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
+            return null;
         }
-        return null;
-    }
-    
-    private Transaction findTransactionById(String id) {
-        for (Transaction t : transactions) {
-            if (t.getTransactionId().equalsIgnoreCase(id.trim())) return t;
-        }
-        return null;
     }
 }
-

@@ -1,20 +1,12 @@
 package com.pharmacy;
 
+import com.pharmacy.db.DatabaseConnection;
+import com.pharmacy.db.UserDAO;
 import com.pharmacy.models.persons.*;
-import com.pharmacy.models.products.*;
-import com.pharmacy.models.transactions.*;
 import com.pharmacy.services.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    // Data storage
-    private static List<product> products = new ArrayList<>();
-    private static List<Customer> customers = new ArrayList<>();
-    private static List<Pharmacist> pharmacists = new ArrayList<>();
-    private static List<Transaction> transactions = new ArrayList<>();
-    
     private static Scanner scanner = new Scanner(System.in);
     private static Pharmacist currentPharmacist = null;
     
@@ -26,7 +18,7 @@ public class Main {
     
     public static void main(String[] args) {
         printHeader();
-        initializeTestData();
+        initializeDatabase();
         
         if (!login()) {
             System.out.println("Login failed. Exiting...");
@@ -35,6 +27,9 @@ public class Main {
         
         initializeServices();
         runMainLoop();
+        
+        System.out.println("\nClosing database connection...");
+        DatabaseConnection.getInstance().closeConnection();
         scanner.close();
     }
     
@@ -44,43 +39,40 @@ public class Main {
         System.out.println("                                        ");
     }
     
-    private static void initializeTestData() {
-        Pharmacist pharm1 = new Pharmacist("PHR111", "benmalti mouaad", "02398857578", "kjhfu@gmail.com", "mosta", "78487578392");
-        pharm1.setAccessLevel(3);
-        pharmacists.add(pharm1);
-
-        if (DataService.dataFilesExist()) {
-            DataService.loadProducts(products);
-            DataService.loadCustomers(customers);
-            DataService.loadStock(products);
-            DataService.loadSales(transactions);
-            System.out.println("Test data loaded from 'data'.");
-        } else {
-            DataService.saveAllData(products, customers, transactions);
-            System.out.println("No data files found. Created initial data in 'data'.");
-        }
-        System.out.println("Login ID: PHR111\n");
+    private static void initializeDatabase() {
+        System.out.print("Initializing Database... ");
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        db.initializeDatabase();
+        System.out.println("Done.");
+        System.out.println("Default Login ID: admin (Pass: admin123)\n");
     }
     
     private static void initializeServices() {
-        productService = new ProductService(products, scanner, currentPharmacist);
-        customerService = new CustomerService(customers, transactions, scanner);
-        inventoryService = new InventoryService(products, transactions, scanner, currentPharmacist, productService);
-        saleService = new SaleService(products, customers, transactions, scanner, currentPharmacist, productService, customerService);
+        productService = new ProductService(scanner, currentPharmacist);
+        customerService = new CustomerService(scanner);
+        inventoryService = new InventoryService(scanner, currentPharmacist, productService);
+        saleService = new SaleService(scanner, currentPharmacist, productService, customerService);
     }
     
     private static boolean login() {
         System.out.println("PHARMACIST LOGIN");
-        System.out.print("Enter Pharmacist ID: ");
-        String id = scanner.nextLine().trim();
+        System.out.print("Username (admin): ");
+        String username = scanner.nextLine().trim();
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
         
-        for (Pharmacist pharm : pharmacists) {
-            if (pharm.getPersonId().equalsIgnoreCase(id)) {
-                currentPharmacist = pharm;
-                System.out.println("\nWelcome, " + pharm.getFullName() + "!");
-                System.out.println(" Access Level: " + pharm.getAccessLevelName() + "\n");
+        UserDAO userDAO = new UserDAO();
+        try {
+            currentPharmacist = userDAO.authenticate(username, password);
+            if (currentPharmacist != null) {
+                System.out.println("\nWelcome, " + currentPharmacist.getFullName() + "!");
+                System.out.println("Access Level: " + currentPharmacist.getAccessLevelName() + "\n");
                 return true;
+            } else {
+                System.out.println("\nInvalid username or password.");
             }
+        } catch (Exception e) {
+            System.out.println("\nDatabase error during login: " + e.getMessage());
         }
         return false;
     }
@@ -99,10 +91,10 @@ public class Main {
                 case 5: viewTransactions(); break;
                 case 6: 
                     running = false;
-                    System.out.println("\n Thank you for using PMS!");
+                    System.out.println("\nThank you for using PMS!");
                     break;
                 default: 
-                    System.out.println(" Invalid choice!");
+                    System.out.println("Invalid choice!");
             }
         }
     }
@@ -136,19 +128,10 @@ public class Main {
             
             switch (choice) {
                 case 1: productService.viewAllProducts(); break;
-                case 2: 
-                    productService.addProduct();
-                    saveData();
-                    break;
+                case 2: productService.addProduct(); break;
                 case 3: productService.searchProduct(); break;
-                case 4: 
-                    productService.updateProduct();
-                    saveData();
-                    break;
-                case 5: 
-                    productService.deleteProduct();
-                    saveData();
-                    break;
+                case 4: productService.updateProduct(); break;
+                case 5: productService.deleteProduct(); break;
                 default: System.out.println(" Invalid choice!");
             }
         }
@@ -171,10 +154,7 @@ public class Main {
                 case 1: inventoryService.checkStockLevels(); break;
                 case 2: inventoryService.lowStockAlert(); break;
                 case 3: inventoryService.checkExpirations(); break;
-                case 4: 
-                    inventoryService.processRestock();
-                    saveData();
-                    break;
+                case 4: inventoryService.processRestock(); break;
                 default: System.out.println("Invalid choice!");
             }
         }
@@ -190,10 +170,8 @@ public class Main {
         
         if (choice == 1) {
             saleService.processNewSale();
-            saveData();
         } else if (choice == 2) {
             saleService.processReturn();
-            saveData();
         } else {
             System.out.println("Invalid choice!");
         }
@@ -214,10 +192,7 @@ public class Main {
             
             switch (choice) {
                 case 1: customerService.viewAllCustomers(); break;
-                case 2: 
-                    customerService.registerCustomer();
-                    saveData();
-                    break;
+                case 2: customerService.registerCustomer(); break;
                 case 3: customerService.viewCustomerDetails(); break;
                 case 4: customerService.viewPurchaseHistory(); break;
                 default: System.out.println("Invalid choice!");
@@ -227,21 +202,9 @@ public class Main {
     
     // 5. VIEW TRANSACTIONS
     private static void viewTransactions() {
-        System.out.println("\nALL TRANSACTIONS (" + transactions.size() + ")");
-        
-        if (transactions.isEmpty()) {
-            System.out.println("No transactions yet.");
-            return;
-        }
-        
-        for (Transaction txn : transactions) {
-            System.out.println("\n" + txn);
-            System.out.println("─".repeat(50));
-        }
-    }
-    
-    private static void saveData() {
-        DataService.saveAllData(products, customers, transactions);
+        System.out.println("\nALL TRANSACTIONS is now managed via individual Customer Purchase History / Database GUI.");
+        // We moved away from an all-encompassing in-memory transaction list.
+        // We can print all sales, restocks, returns here if needed, but standard is customer history.
     }
     
     private static int getIntInput(String prompt) {

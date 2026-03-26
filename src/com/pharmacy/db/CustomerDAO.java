@@ -193,6 +193,9 @@ public class CustomerDAO {
         if (loyalty > 0) {
             c.addLoyaltyPoints(loyalty);
         }
+        // Load allergens from DB into Customer's HashSet
+        String allergensStr = rs.getString("allergens");
+        c.setAllergensFromString(allergensStr);
         return c;
     }
 }
