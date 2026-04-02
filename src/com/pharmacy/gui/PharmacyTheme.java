@@ -1,45 +1,55 @@
 package com.pharmacy.gui;
 
 import javax.swing.*;
+import javax.swing.table.*;
 import java.awt.*;
 
 /**
- * Shared theme constants for the entire GUI.
- * Dark mode pharmacy aesthetic with green accents.
+ * Shared theme constants — refined dark-mode slate palette
+ * with professional accent colors and custom icon/badge helpers.
  */
 public class PharmacyTheme {
 
-    // ═══════ Color Palette ═══════
-    public static final Color BG_DARK       = new Color(18, 18, 24);
-    public static final Color BG_PANEL      = new Color(26, 26, 36);
-    public static final Color BG_CARD       = new Color(34, 34, 48);
-    public static final Color BG_INPUT      = new Color(42, 42, 56);
-    public static final Color BG_HOVER      = new Color(50, 50, 68);
+    // ═══════ Slate Color Palette ═══════
+    public static final Color BG_DARK       = new Color(15, 23, 42);    // slate-900
+    public static final Color BG_PANEL      = new Color(30, 41, 59);    // slate-800
+    public static final Color BG_CARD       = new Color(51, 65, 85);    // slate-700
+    public static final Color BG_INPUT      = new Color(71, 85, 105);   // slate-600
+    public static final Color BG_HOVER      = new Color(100, 116, 139); // slate-500
+    public static final Color BG_CARD_ALT   = new Color(45, 58, 78);    // slightly lighter for alt rows
 
-    public static final Color ACCENT_GREEN  = new Color(0, 200, 120);
-    public static final Color ACCENT_BLUE   = new Color(80, 140, 255);
-    public static final Color ACCENT_RED    = new Color(255, 80, 80);
-    public static final Color ACCENT_YELLOW = new Color(255, 200, 60);
-    public static final Color ACCENT_PURPLE = new Color(160, 100, 255);
+    // ═══════ Accent Colors (muted & professional) ═══════
+    public static final Color ACCENT_GREEN  = new Color(52, 211, 153);  // emerald-400
+    public static final Color ACCENT_BLUE   = new Color(129, 140, 248); // indigo-400
+    public static final Color ACCENT_RED    = new Color(251, 113, 133); // rose-400
+    public static final Color ACCENT_YELLOW = new Color(251, 191, 36);  // amber-400
+    public static final Color ACCENT_PURPLE = new Color(167, 139, 250); // violet-400
 
-    public static final Color TEXT_PRIMARY   = new Color(230, 230, 240);
-    public static final Color TEXT_SECONDARY = new Color(150, 150, 170);
-    public static final Color TEXT_MUTED     = new Color(100, 100, 120);
-    public static final Color BORDER         = new Color(60, 60, 80);
+    // ═══════ Text Colors ═══════
+    public static final Color TEXT_PRIMARY   = new Color(226, 232, 240); // slate-200
+    public static final Color TEXT_SECONDARY = new Color(148, 163, 184); // slate-400
+    public static final Color TEXT_MUTED     = new Color(100, 116, 139); // slate-500
+    public static final Color BORDER         = new Color(51, 65, 85);    // slate-700
 
     // ═══════ Fonts ═══════
-    public static final Font FONT_TITLE    = new Font("Segoe UI", Font.BOLD, 28);
+    public static final Font FONT_TITLE    = new Font("Segoe UI", Font.BOLD, 26);
     public static final Font FONT_SUBTITLE = new Font("Segoe UI", Font.BOLD, 18);
     public static final Font FONT_HEADING  = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_BODY     = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font FONT_SMALL    = new Font("Segoe UI", Font.PLAIN, 12);
     public static final Font FONT_MONO     = new Font("Consolas", Font.PLAIN, 13);
+    public static final Font FONT_STAT     = new Font("Segoe UI", Font.BOLD, 36);
+    public static final Font FONT_ICON     = new Font("Segoe UI", Font.BOLD, 28);
 
     // ═══════ Dimensions ═══════
-    public static final int CARD_RADIUS = 12;
+    public static final int CARD_RADIUS = 16;
     public static final int INPUT_HEIGHT = 40;
     public static final int BUTTON_HEIGHT = 42;
-    public static final Insets CARD_PADDING = new Insets(16, 20, 16, 20);
+    public static final Insets CARD_PADDING = new Insets(20, 24, 20, 24);
+
+    // ═══════════════════════════════════════════════
+    //  Factory Methods
+    // ═══════════════════════════════════════════════
 
     /**
      * Create a styled button with hover effects.
@@ -55,7 +65,7 @@ public class PharmacyTheme {
                 } else {
                     g2.setColor(bgColor);
                 }
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -72,7 +82,7 @@ public class PharmacyTheme {
     }
 
     /**
-     * Create a styled text field.
+     * Create a styled text field with placeholder.
      */
     public static JTextField createTextField(String placeholder) {
         JTextField field = new JTextField() {
@@ -100,7 +110,7 @@ public class PharmacyTheme {
     }
 
     /**
-     * Create a styled password field.
+     * Create a styled password field with placeholder.
      */
     public static JPasswordField createPasswordField(String placeholder) {
         JPasswordField field = new JPasswordField() {
@@ -128,7 +138,7 @@ public class PharmacyTheme {
     }
 
     /**
-     * Create a rounded panel with dark background.
+     * Create a rounded card panel with subtle border glow.
      */
     public static JPanel createCard() {
         JPanel card = new JPanel() {
@@ -136,8 +146,13 @@ public class PharmacyTheme {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Card background
                 g2.setColor(BG_CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_RADIUS, CARD_RADIUS);
+                // Subtle border
+                g2.setColor(new Color(100, 116, 139, 60));
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_RADIUS, CARD_RADIUS);
                 g2.dispose();
             }
         };
@@ -148,7 +163,7 @@ public class PharmacyTheme {
     }
 
     /**
-     * Create a label with the theme's primary color.
+     * Create a themed label.
      */
     public static JLabel createLabel(String text, Font font, Color color) {
         JLabel label = new JLabel(text);
@@ -158,22 +173,148 @@ public class PharmacyTheme {
     }
 
     /**
-     * Style a JTable with the dark theme.
+     * Create a status badge — pill-shaped colored label.
+     */
+    public static JLabel createStatusBadge(String text, Color bgColor) {
+        JLabel badge = new JLabel(text, SwingConstants.CENTER) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue(), 40));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        badge.setForeground(bgColor);
+        badge.setOpaque(false);
+        badge.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
+        return badge;
+    }
+
+    /**
+     * Create a simple icon label using Graphics2D — replaces broken emoji.
+     * Types: "cart", "dollar", "pill", "users", "box", "home", "rx"
+     */
+    public static JLabel createIconLabel(String type, Color color, int size) {
+        JLabel label = new JLabel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(color);
+                int cx = getWidth() / 2;
+                int cy = getHeight() / 2;
+                int r = size / 2;
+                switch (type.toLowerCase()) {
+                    case "cart":
+                        g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        // Cart body
+                        int[] xPts = {cx - r, cx - r + 4, cx + r - 2, cx + r};
+                        int[] yPts = {cy - r + 4, cy + r - 6, cy + r - 6, cy - r + 4};
+                        g2.drawPolyline(xPts, yPts, 4);
+                        // Handle
+                        g2.drawLine(cx - r, cy - r + 4, cx - r - 4, cy - r - 2);
+                        // Wheels
+                        g2.fillOval(cx - r + 6, cy + r - 5, 5, 5);
+                        g2.fillOval(cx + r - 8, cy + r - 5, 5, 5);
+                        break;
+                    case "dollar":
+                        g2.setFont(new Font("Segoe UI", Font.BOLD, size));
+                        FontMetrics fm = g2.getFontMetrics();
+                        String s = "$";
+                        g2.drawString(s, cx - fm.stringWidth(s) / 2, cy + fm.getAscent() / 2 - 2);
+                        break;
+                    case "pill":
+                        g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        g2.drawRoundRect(cx - r / 2, cy - r, r, r * 2, r, r);
+                        g2.drawLine(cx - r / 2, cy, cx + r / 2, cy);
+                        break;
+                    case "users":
+                        // Two user silhouettes
+                        g2.fillOval(cx - 5, cy - r, 10, 10);
+                        g2.fillArc(cx - 10, cy, 20, 14, 0, 180);
+                        // Second user behind
+                        g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 140));
+                        g2.fillOval(cx + 5, cy - r - 2, 9, 9);
+                        g2.fillArc(cx, cy - 2, 18, 12, 0, 180);
+                        break;
+                    case "box":
+                        g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        g2.drawRect(cx - r, cy - r + 4, size, size - 4);
+                        g2.drawLine(cx - r, cy - r + 4, cx, cy - r - 4);
+                        g2.drawLine(cx, cy - r - 4, cx + r, cy - r + 4);
+                        g2.drawLine(cx, cy - r - 4, cx, cy + 2);
+                        break;
+                    default: // dot fallback
+                        g2.fillOval(cx - r / 2, cy - r / 2, r, r);
+                        break;
+                }
+                g2.dispose();
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(size + 12, size + 12);
+            }
+        };
+        label.setOpaque(false);
+        return label;
+    }
+
+    /**
+     * Style a JTable with the refined dark theme + alternating rows.
      */
     public static void styleTable(JTable table) {
         table.setFont(FONT_BODY);
         table.setForeground(TEXT_PRIMARY);
         table.setBackground(BG_CARD);
-        table.setGridColor(BORDER);
-        table.setSelectionBackground(ACCENT_GREEN.darker());
-        table.setSelectionForeground(Color.WHITE);
-        table.setRowHeight(36);
-        table.setShowGrid(true);
-        table.setIntercellSpacing(new Dimension(1, 1));
-        table.getTableHeader().setFont(FONT_HEADING);
-        table.getTableHeader().setBackground(BG_PANEL);
-        table.getTableHeader().setForeground(TEXT_SECONDARY);
-        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT_GREEN));
+        table.setGridColor(new Color(51, 65, 85, 80));
+        table.setSelectionBackground(new Color(52, 211, 153, 50));
+        table.setSelectionForeground(TEXT_PRIMARY);
+        table.setRowHeight(40);
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFillsViewportHeight(true);
+
+        // Alternating row colors
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int col) {
+                Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? BG_CARD : BG_CARD_ALT);
+                }
+                c.setForeground(TEXT_PRIMARY);
+                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                return c;
+            }
+        });
+
+        // Header styling
+        JTableHeader header = table.getTableHeader();
+        header.setFont(FONT_HEADING);
+        header.setBackground(BG_PANEL);
+        header.setForeground(TEXT_SECONDARY);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT_GREEN));
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel l = (JLabel) super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
+                l.setBackground(BG_PANEL);
+                l.setForeground(TEXT_SECONDARY);
+                l.setFont(FONT_HEADING);
+                l.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT_GREEN),
+                        BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+                return l;
+            }
+        });
     }
 
     /**
@@ -182,5 +323,18 @@ public class PharmacyTheme {
     public static void styleScrollPane(JScrollPane scrollPane) {
         scrollPane.setBorder(BorderFactory.createLineBorder(BORDER, 1));
         scrollPane.getViewport().setBackground(BG_CARD);
+    }
+
+    /**
+     * Get status badge color by status string.
+     */
+    public static Color getStatusColor(String status) {
+        if (status == null) return TEXT_MUTED;
+        switch (status.toUpperCase()) {
+            case "OK": case "AVAILABLE": return ACCENT_GREEN;
+            case "LOW": return ACCENT_YELLOW;
+            case "CRITICAL": case "UNAVAILABLE": case "EXPIRED": case "EXPIRING": return ACCENT_RED;
+            default: return TEXT_MUTED;
+        }
     }
 }

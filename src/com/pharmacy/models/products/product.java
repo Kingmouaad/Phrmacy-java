@@ -10,8 +10,17 @@ public abstract class  product implements Sellable {
 
     public product(String id,String name,double price,int quantity){
         
-        if(price<0 || name==null){
-            throw new IllegalArgumentException("error enter the correct price or the write a name ");
+        if(id==null || id.trim().isEmpty()){
+            throw new IllegalArgumentException("Product ID cannot be null or empty");
+        }
+        if(name==null || name.trim().isEmpty()){
+            throw new IllegalArgumentException("Product name cannot be null or empty");
+        }
+        if(price<0){
+            throw new IllegalArgumentException("Price cannot be negative");
+        }
+        if(quantity<0){
+            throw new IllegalArgumentException("Quantity cannot be negative");
         }
         this.id=id;
         this.name=name;
@@ -55,7 +64,7 @@ public abstract class  product implements Sellable {
      @Override
     public String toString() {
         return  
-               ", Id of the poduct: " + this.id +
+               "Id: " + this.id +
                ", Name: " + this.name +
                ", Price: " + this.price +
                ", Quantity: " + this.quantity;

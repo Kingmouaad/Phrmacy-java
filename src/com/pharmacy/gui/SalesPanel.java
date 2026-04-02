@@ -41,13 +41,13 @@ public class SalesPanel extends JPanel {
         this.saleDAO = new SaleDAO();
         setBackground(PharmacyTheme.BG_DARK);
         setLayout(new BorderLayout(15, 15));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
         buildUI();
     }
 
     private void buildUI() {
         // Header
-        JLabel title = PharmacyTheme.createLabel("🛒 Sales Terminal",
+        JLabel title = PharmacyTheme.createLabel("Sales Terminal",
                 PharmacyTheme.FONT_TITLE, PharmacyTheme.TEXT_PRIMARY);
         add(title, BorderLayout.NORTH);
 
@@ -63,53 +63,86 @@ public class SalesPanel extends JPanel {
         PharmacyTheme.styleScrollPane(scrollPane);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Right: Input form
-        JPanel formPanel = new JPanel();
+        // Right: Input form — styled as a card
+        JPanel formPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(PharmacyTheme.BG_PANEL);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(new Color(100, 116, 139, 40));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
+                g2.dispose();
+            }
+        };
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setPreferredSize(new Dimension(280, 0));
-        formPanel.setBackground(PharmacyTheme.BG_PANEL);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        formPanel.setOpaque(false);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 18, 20, 18));
 
-        formPanel.add(PharmacyTheme.createLabel("Customer ID", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY));
+        // Form title
+        JLabel formTitle = PharmacyTheme.createLabel("New Sale", PharmacyTheme.FONT_SUBTITLE, PharmacyTheme.TEXT_PRIMARY);
+        formTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(formTitle);
+        formPanel.add(Box.createVerticalStrut(16));
+
+        JLabel custLabel = PharmacyTheme.createLabel("Customer ID", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY);
+        custLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(custLabel);
         customerIdField = PharmacyTheme.createTextField("e.g. CUS001");
         customerIdField.setMaximumSize(new Dimension(250, 40));
+        customerIdField.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(customerIdField);
         formPanel.add(Box.createVerticalStrut(12));
 
-        formPanel.add(PharmacyTheme.createLabel("Product ID", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY));
+        JLabel prodLabel = PharmacyTheme.createLabel("Product ID", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY);
+        prodLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(prodLabel);
         productIdField = PharmacyTheme.createTextField("e.g. MED001");
         productIdField.setMaximumSize(new Dimension(250, 40));
+        productIdField.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(productIdField);
         formPanel.add(Box.createVerticalStrut(8));
 
-        formPanel.add(PharmacyTheme.createLabel("Quantity", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY));
+        JLabel qtyLabel = PharmacyTheme.createLabel("Quantity", PharmacyTheme.FONT_SMALL, PharmacyTheme.TEXT_SECONDARY);
+        qtyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(qtyLabel);
         qtyField = PharmacyTheme.createTextField("1");
         qtyField.setMaximumSize(new Dimension(250, 40));
+        qtyField.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(qtyField);
-        formPanel.add(Box.createVerticalStrut(12));
+        formPanel.add(Box.createVerticalStrut(14));
 
         JButton addToCartBtn = PharmacyTheme.createButton("+ Add to Cart", PharmacyTheme.ACCENT_BLUE);
-        addToCartBtn.setMaximumSize(new Dimension(250, 40));
+        addToCartBtn.setMaximumSize(new Dimension(250, 42));
+        addToCartBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         addToCartBtn.addActionListener(e -> addToCart());
         formPanel.add(addToCartBtn);
 
-        formPanel.add(Box.createVerticalStrut(20));
+        formPanel.add(Box.createVerticalStrut(24));
 
+        // Subtotal — prominent
         subtotalLabel = PharmacyTheme.createLabel("Subtotal: $0.00",
-                PharmacyTheme.FONT_SUBTITLE, PharmacyTheme.ACCENT_GREEN);
+                PharmacyTheme.FONT_TITLE, PharmacyTheme.ACCENT_GREEN);
+        subtotalLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(subtotalLabel);
 
         formPanel.add(Box.createVerticalGlue());
 
+        // Complete Sale — large, prominent
         JButton completeBtn = PharmacyTheme.createButton("Complete Sale", PharmacyTheme.ACCENT_GREEN);
-        completeBtn.setMaximumSize(new Dimension(250, 44));
+        completeBtn.setMaximumSize(new Dimension(250, 48));
+        completeBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        completeBtn.setFont(PharmacyTheme.FONT_SUBTITLE);
         completeBtn.addActionListener(e -> completeSale());
         formPanel.add(completeBtn);
 
-        formPanel.add(Box.createVerticalStrut(8));
+        formPanel.add(Box.createVerticalStrut(10));
 
         JButton clearBtn = PharmacyTheme.createButton("Clear Cart", PharmacyTheme.ACCENT_RED);
-        clearBtn.setMaximumSize(new Dimension(250, 36));
+        clearBtn.setMaximumSize(new Dimension(250, 38));
+        clearBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         clearBtn.addActionListener(e -> clearCart());
         formPanel.add(clearBtn);
 
@@ -133,8 +166,17 @@ public class SalesPanel extends JPanel {
             }
 
             int qty = Integer.parseInt(qtyStr);
-            if (qty <= 0 || qty > p.getquantity()) {
-                JOptionPane.showMessageDialog(this, "Invalid quantity (available: " + p.getquantity() + ")");
+            
+            // Calculate how many of this product are already in the cart
+            int alreadyInCart = 0;
+            for (int i = 0; i < cartProductIds.size(); i++) {
+                if (cartProductIds.get(i).equals(pid)) {
+                    alreadyInCart += cartQuantities.get(i);
+                }
+            }
+
+            if (qty <= 0 || (qty + alreadyInCart) > p.getquantity()) {
+                JOptionPane.showMessageDialog(this, "Invalid quantity (available: " + p.getquantity() + ", already in cart: " + alreadyInCart + ")");
                 return;
             }
 

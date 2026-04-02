@@ -224,12 +224,13 @@ public class SaleDAO {
      * Get the next available transaction ID.
      */
     public String getNextTransactionId() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM sales";
+        // Use MAX instead of COUNT to avoid ID collisions after deletions
+        String sql = "SELECT MAX(CAST(SUBSTR(transaction_id, 4) AS INTEGER)) FROM sales";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
-                int count = rs.getInt(1) + 1;
-                return "TXN" + String.format("%03d", count);
+                int maxNum = rs.getInt(1); // returns 0 if no rows
+                return "TXN" + String.format("%03d", maxNum + 1);
             }
         }
         return "TXN001";

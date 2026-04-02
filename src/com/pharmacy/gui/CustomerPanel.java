@@ -26,14 +26,14 @@ public class CustomerPanel extends JPanel {
         this.saleDAO = new SaleDAO();
         setBackground(PharmacyTheme.BG_DARK);
         setLayout(new BorderLayout(15, 15));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
         buildUI();
         refresh();
     }
 
     private void buildUI() {
         // Header
-        JLabel title = PharmacyTheme.createLabel("👥 Customer Management",
+        JLabel title = PharmacyTheme.createLabel("Customer Management",
                 PharmacyTheme.FONT_TITLE, PharmacyTheme.TEXT_PRIMARY);
         add(title, BorderLayout.NORTH);
 
@@ -50,22 +50,22 @@ public class CustomerPanel extends JPanel {
         PharmacyTheme.styleScrollPane(scrollPane);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Actions
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        // Actions — centered
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 10));
         actions.setOpaque(false);
 
         JButton addBtn = PharmacyTheme.createButton("+ Register", PharmacyTheme.ACCENT_GREEN);
-        addBtn.setPreferredSize(new Dimension(140, 36));
+        addBtn.setPreferredSize(new Dimension(140, 38));
         addBtn.addActionListener(e -> showRegisterDialog());
         actions.add(addBtn);
 
         JButton historyBtn = PharmacyTheme.createButton("Purchase History", PharmacyTheme.ACCENT_BLUE);
-        historyBtn.setPreferredSize(new Dimension(170, 36));
+        historyBtn.setPreferredSize(new Dimension(170, 38));
         historyBtn.addActionListener(e -> showPurchaseHistory());
         actions.add(historyBtn);
 
         JButton refreshBtn = PharmacyTheme.createButton("Refresh", PharmacyTheme.ACCENT_PURPLE);
-        refreshBtn.setPreferredSize(new Dimension(120, 36));
+        refreshBtn.setPreferredSize(new Dimension(120, 38));
         refreshBtn.addActionListener(e -> refresh());
         actions.add(refreshBtn);
 

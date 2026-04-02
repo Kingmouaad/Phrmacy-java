@@ -74,9 +74,10 @@ public class SalesHistory {
      */
     public List<Sale> getRecentSales(int count) {
         LinkedList<Sale> recent = new LinkedList<>();
-        int start = Math.max(0, history.size() - count);
-        for (int i = history.size() - 1; i >= start; i--) {
-            recent.add(history.get(i));
+        // Use descendingIterator() instead of get(i) — O(n) vs O(n²)
+        java.util.Iterator<Sale> it = history.descendingIterator();
+        while (it.hasNext() && recent.size() < count) {
+            recent.add(it.next());
         }
         return recent;
     }

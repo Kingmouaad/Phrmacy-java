@@ -8,8 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Login screen — the first thing the user sees.
- * Dark-themed, modern pharmacy login with animated accent.
+ * Login screen — dark-themed, modern pharmacy login.
  */
 public class LoginFrame extends JFrame {
 
@@ -38,7 +37,7 @@ public class LoginFrame extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 GradientPaint gp = new GradientPaint(0, 0, PharmacyTheme.BG_DARK,
-                        getWidth(), getHeight(), new Color(10, 20, 30));
+                        getWidth(), getHeight(), new Color(10, 20, 36));
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 g2.dispose();
@@ -46,13 +45,13 @@ public class LoginFrame extends JFrame {
         };
         mainPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 0, 6, 0);
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // ═══ Logo / Title ═══
-        JLabel icon = new JLabel("💊", SwingConstants.CENTER);
-        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 56));
+        // ═══ Logo — styled "Rx" text ═══
+        JLabel icon = new JLabel("Rx", SwingConstants.CENTER);
+        icon.setFont(new Font("Segoe UI", Font.BOLD, 56));
+        icon.setForeground(PharmacyTheme.ACCENT_GREEN);
         gbc.gridy = 0;
         gbc.insets = new Insets(30, 0, 0, 0);
         mainPanel.add(icon, gbc);
@@ -133,30 +132,38 @@ public class LoginFrame extends JFrame {
         statusLabel.setForeground(PharmacyTheme.ACCENT_YELLOW);
         statusLabel.setText("Authenticating...");
 
-        SwingUtilities.invokeLater(() -> {
-            try {
+        // Run DB query on a background thread so the UI stays responsive
+        new SwingWorker<Pharmacist, Void>() {
+            @Override
+            protected Pharmacist doInBackground() throws Exception {
                 UserDAO userDAO = new UserDAO();
-                Pharmacist pharmacist = userDAO.authenticate(username, password);
-
-                if (pharmacist != null) {
-                    statusLabel.setForeground(PharmacyTheme.ACCENT_GREEN);
-                    statusLabel.setText("Welcome, " + pharmacist.getFullName() + "!");
-
-                    Timer timer = new Timer(600, ev -> {
-                        dispose();
-                        new MainDashboard(pharmacist);
-                    });
-                    timer.setRepeats(false);
-                    timer.start();
-                } else {
-                    statusLabel.setForeground(PharmacyTheme.ACCENT_RED);
-                    statusLabel.setText("Invalid username or password");
-                    passwordField.setText("");
-                }
-            } catch (Exception ex) {
-                statusLabel.setForeground(PharmacyTheme.ACCENT_RED);
-                statusLabel.setText("Error: " + ex.getMessage());
+                return userDAO.authenticate(username, password);
             }
-        });
+
+            @Override
+            protected void done() {
+                try {
+                    Pharmacist pharmacist = get();
+                    if (pharmacist != null) {
+                        statusLabel.setForeground(PharmacyTheme.ACCENT_GREEN);
+                        statusLabel.setText("Welcome, " + pharmacist.getFullName() + "!");
+
+                        Timer timer = new Timer(600, ev -> {
+                            dispose();
+                            new MainDashboard(pharmacist);
+                        });
+                        timer.setRepeats(false);
+                        timer.start();
+                    } else {
+                        statusLabel.setForeground(PharmacyTheme.ACCENT_RED);
+                        statusLabel.setText("Invalid username or password");
+                        passwordField.setText("");
+                    }
+                } catch (Exception ex) {
+                    statusLabel.setForeground(PharmacyTheme.ACCENT_RED);
+                    statusLabel.setText("Error: " + ex.getMessage());
+                }
+            }
+        }.execute();
     }
 }

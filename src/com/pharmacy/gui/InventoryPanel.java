@@ -5,7 +5,7 @@ import com.pharmacy.interfaces.Expirable;
 import com.pharmacy.models.products.product;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +24,7 @@ public class InventoryPanel extends JPanel {
         this.productDAO = new ProductDAO();
         setBackground(PharmacyTheme.BG_DARK);
         setLayout(new BorderLayout(15, 15));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
         buildUI();
         refresh();
     }
@@ -34,7 +34,7 @@ public class InventoryPanel extends JPanel {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
 
-        JLabel title = PharmacyTheme.createLabel("📦 Inventory Overview",
+        JLabel title = PharmacyTheme.createLabel("Inventory Overview",
                 PharmacyTheme.FONT_TITLE, PharmacyTheme.TEXT_PRIMARY);
         header.add(title, BorderLayout.WEST);
 
@@ -54,31 +54,34 @@ public class InventoryPanel extends JPanel {
         table = new JTable(tableModel);
         PharmacyTheme.styleTable(table);
 
+        // Status column badge renderer
+        table.getColumnModel().getColumn(5).setCellRenderer(new StatusBadgeRenderer());
+
         JScrollPane scrollPane = new JScrollPane(table);
         PharmacyTheme.styleScrollPane(scrollPane);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Actions
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        // Actions — centered
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 10));
         actions.setOpaque(false);
 
         JButton lowStockBtn = PharmacyTheme.createButton("Low Stock Only", PharmacyTheme.ACCENT_YELLOW);
-        lowStockBtn.setPreferredSize(new Dimension(160, 36));
+        lowStockBtn.setPreferredSize(new Dimension(160, 38));
         lowStockBtn.addActionListener(e -> showLowStock());
         actions.add(lowStockBtn);
 
         JButton expiringBtn = PharmacyTheme.createButton("Expiring Soon", PharmacyTheme.ACCENT_RED);
-        expiringBtn.setPreferredSize(new Dimension(160, 36));
+        expiringBtn.setPreferredSize(new Dimension(160, 38));
         expiringBtn.addActionListener(e -> showExpiring());
         actions.add(expiringBtn);
 
         JButton restockBtn = PharmacyTheme.createButton("Restock", PharmacyTheme.ACCENT_GREEN);
-        restockBtn.setPreferredSize(new Dimension(120, 36));
+        restockBtn.setPreferredSize(new Dimension(120, 38));
         restockBtn.addActionListener(e -> showRestockDialog());
         actions.add(restockBtn);
 
         JButton allBtn = PharmacyTheme.createButton("Show All", PharmacyTheme.ACCENT_BLUE);
-        allBtn.setPreferredSize(new Dimension(120, 36));
+        allBtn.setPreferredSize(new Dimension(120, 38));
         allBtn.addActionListener(e -> refresh());
         actions.add(allBtn);
 
@@ -119,11 +122,11 @@ public class InventoryPanel extends JPanel {
         try {
             List<product> products = productDAO.findAll();
             for (product p : products) {
-                if (p.getquantity() <= 10) {
+                if (p.getquantity() <= 20) {
                     tableModel.addRow(new Object[]{
                         p.getid(), p.getname(), p.getProductType(),
                         p.getquantity(), String.format("$%.2f", p.getprice()),
-                        "LOW", "—"
+                        "Low", "—"
                     });
                 }
             }
@@ -148,7 +151,7 @@ public class InventoryPanel extends JPanel {
                 tableModel.addRow(new Object[]{
                     p.getid(), p.getname(), p.getProductType(),
                     p.getquantity(), String.format("$%.2f", p.getprice()),
-                    "EXPIRING", expiry
+                    "Expiring", expiry
                 });
             }
         } catch (SQLException e) {
@@ -180,6 +183,43 @@ public class InventoryPanel extends JPanel {
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Custom renderer for status column — renders colored pill badges.
+     */
+    private static class StatusBadgeRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int col) {
+            String status = value != null ? value.toString() : "";
+            Color badgeColor = PharmacyTheme.getStatusColor(status);
+
+            JLabel badge = new JLabel(status, SwingConstants.CENTER) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    if (isSelected) {
+                        g2.setColor(new Color(52, 211, 153, 50));
+                        g2.fillRect(0, 0, getWidth(), getHeight());
+                    } else {
+                        g2.setColor(row % 2 == 0 ? PharmacyTheme.BG_CARD : PharmacyTheme.BG_CARD_ALT);
+                        g2.fillRect(0, 0, getWidth(), getHeight());
+                    }
+                    g2.setColor(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 35));
+                    int px = 8, py = 6;
+                    g2.fillRoundRect(px, py, getWidth() - px * 2, getHeight() - py * 2, 12, 12);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
+            badge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            badge.setForeground(badgeColor);
+            badge.setOpaque(false);
+            badge.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+            return badge;
         }
     }
 }
